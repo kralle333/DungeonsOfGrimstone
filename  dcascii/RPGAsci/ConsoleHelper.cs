@@ -31,5 +31,12 @@ namespace RPGAsci
 			Console.Write(text);
 			Console.ResetColor();
 		}
+		static public void WriteBlanks(int numberOfBlanks)
+		{
+			for(int i = 0;i<numberOfBlanks;i++)
+			{
+				Console.WriteLine(" ");
+			}
+		}
 	}
 }
