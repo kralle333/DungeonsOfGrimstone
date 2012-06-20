@@ -224,7 +224,7 @@ namespace RPGAsci
 													{
 														unit.skillsLeft[skillIndex].Use(unit, remainingCharacters.Find(x => x.name == item.text));
 													}
-													
+													targetMenu.Clear();
 													break;
 												}
 											}
@@ -250,6 +250,74 @@ namespace RPGAsci
 									{
 										continue;
 									}
+									 if (party.items[ itemIndex ].target == "Self")
+										{
+											party.items.RemoveAt( itemIndex );
+											newTurn = false;
+											usedTurn = true;
+											Console.ReadKey(true);
+											break;
+										}
+										else if (party.items[ itemIndex ].target == "All")
+										{
+											if (party.items[ itemIndex ].offensive)
+											{
+												foreach (Unit m in monsters)
+												{
+													party.items[ itemIndex ].Use( m);
+												}
+											}
+											else
+											{
+												foreach (Unit c in remainingCharacters)
+												{
+													party.items[ itemIndex ].Use( c);
+												}
+											}
+											party.items.RemoveAt( itemIndex );
+											newTurn = false;
+											usedTurn = true;
+											Console.ReadKey(true);
+										}
+										else if (party.items[ itemIndex ].target == "Single")
+										{
+											targetMenu = new MenuItem("Target " + party.items[ itemIndex ].name + " on who?");
+											if (party.items[ itemIndex ].offensive)
+											{
+												foreach (Monster m in monsters)
+												{
+													targetMenu.AddChild(new MenuItem(m.name));
+												}
+											}
+											else
+											{
+												foreach (Character c in remainingCharacters)
+												{
+													targetMenu.AddChild(new MenuItem(c.name));
+												}
+											}
+											battleMenu.Clear();
+											targetMenu.Draw();
+											targetMenu.currentlySelected = true;
+											while (true)
+											{
+												targetMenu.ReadInput();
+												targetMenu.Draw();
+												MenuItem item = targetMenu.childSelected;
+												if (item != null)
+												{
+													if (party.items[ itemIndex ].offensive)
+													{
+														party.items[ itemIndex ].Use(monsters.Find(x=>x.name==item.text));
+													}
+													else
+													{
+														party.items[ itemIndex ].Use(remainingCharacters.Find(x => x.name == item.text));
+													}
+													targetMenu.Clear();
+													break;
+												}
+											}
 								}
 								else
 								{
@@ -356,7 +424,7 @@ namespace RPGAsci
 			foreach (Monster monster in monsters)
 			{
 				Console.Write(monster.image);
-				Console.Write("		");
+				ConsoleHelper.WriteBlanks(monster.name.Length);
 			}
 			Console.Write("\n \n \n \n     ");
 			foreach (Character character in party.characters)
@@ -368,7 +436,7 @@ namespace RPGAsci
 			foreach (Character character in party.characters)
 			{
 				Console.Write(character.image);
-				Console.Write("	    ");
+				 ConsoleHelper.WriteBlanks (character.name.Length);
 			}
 			Console.Write("\n     ");
 			foreach (Character character in party.characters)
