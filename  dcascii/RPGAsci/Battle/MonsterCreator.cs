@@ -61,10 +61,11 @@ namespace RPGAsci
 		}
 		private void InitMonsterTypes()
 		{
-			monsterTypes.Add(new MonsterTemplate(">(o.o)<", "Bat", ConsoleColor.DarkGreen, 1,1, 1, 1,1));
-			monsterTypes.Add(new MonsterTemplate(">*_*<", "Butterfly", ConsoleColor.Blue, 1,1, 1, 2,1));
-			monsterTypes.Add(new MonsterTemplate("^(0v0)^", "Owl", ConsoleColor.Gray, 2,2, 1, 2,1));
-			monsterTypes.Add(new MonsterTemplate(".,.^_^.,.", "Cat", ConsoleColor.Gray,1,3, 1, 2,1));
+			monsterTypes.Add(new MonsterTemplate("bat.txt", "Bat", ConsoleColor.DarkGreen, 1,1, 1, 1,1));
+			monsterTypes.Add(new MonsterTemplate("slime.txt", "Slime", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
+			//monsterTypes.Add(new MonsterTemplate(">*_*<", "Butterfly", ConsoleColor.Blue, 1,1, 1, 2,1));
+			//monsterTypes.Add(new MonsterTemplate("^(0v0)^", "Owl", ConsoleColor.Gray, 2,2, 1, 2,1));
+			//monsterTypes.Add(new MonsterTemplate(".,.^_^.,.", "Cat", ConsoleColor.Gray,1,3, 1, 2,1));
 		}
 	}
 

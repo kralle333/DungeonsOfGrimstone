@@ -62,7 +62,7 @@ namespace RPGAsci
 			int newSpeed = (int)Math.Round(character.speed * Math.Pow(1 + growthRates[character.classType].speed, character.level));
 			int newTalent = (int)Math.Round(character.talent * Math.Pow(1 + growthRates[character.classType].talent, character.level));
 			Console.BackgroundColor = ConsoleColor.Blue;
-			Console.WriteLine("Hp:+{0} Attack:+{1} Defense:+{2} Speed:+{3} Talent:+{4} ",newHP-character.hp,newAttack-character.attack, newDefense-character.defense,newSpeed-character.speed, newTalent-character.talent);
+			ConsoleHelper.GameWriteLine("Hp:+"+(newHP - character.hp)+" Attack:+"+(newAttack - character.attack)+" Defense:+"+(newDefense - character.defense)+" Talent:+"+(newTalent - character.talent)+" Speed:+"+(newSpeed - character.speed));
 			Console.ResetColor();
 			character.hp = newHP;
 			character.attack = newAttack;
@@ -81,13 +81,14 @@ namespace RPGAsci
 			{
 				skillAmount = 1;
 			}
-			LevelChoice c = choices[character.classType][character.level].Find(x => x.text == choice);
+			LevelChoice c = choices[character.classType][character.level-1].Find(x => x.text == choice);
 			if (c.skill != null)
 			{
-				for (int i = 0; i < skillAmount; i++)
+				if (!character.skills.ContainsKey(c.skill))
 				{
-					character.skills.Add(c.skill);
-				}				
+					character.skills[c.skill] = 0;
+				}
+				character.skills[c.skill] += skillAmount;
 			}
 			if (c.unitChanges != null)
 			{
@@ -105,7 +106,7 @@ namespace RPGAsci
 			skills["Shock"] = new Skill(true, "Single", "Shock", new Effect(5));
 			skills["HealAll"] = new Skill(false, "All", "HealAll", new Effect(3,false));
 			skills["FireBlast"] = new Skill(true, "All", "FireBlast", new Effect(7));
-			skills["HealBeam"] = new Skill(false, "Single", "HealBeam", new Effect(32,false));
+			skills["HealingBeam"] = new Skill(false, "Single", "HealingBeam", new Effect(32, false));
 			skills["LightningBolt"] = new Skill(false, "Single", "LightningBolt", new Effect(50));
 
 			//Fighter
@@ -151,7 +152,7 @@ namespace RPGAsci
 			level8Wizard.Add(new LevelChoice("2xHealAll", null, skills["HealAll"]));
 			List<LevelChoice> level9Wizard = new List<LevelChoice>();
 			List<LevelChoice> level10Wizard = new List<LevelChoice>();
-			level10Wizard.Add(new LevelChoice("HealBeam", null, skills["HealBeam"]));
+			level10Wizard.Add(new LevelChoice("HealingBeam", null, skills["HealingBeam"]));
 			level10Wizard.Add(new LevelChoice("Hp+50", new Unit(50, 0, 0, "", "", 0, 0), null));
 			level10Wizard.Add(new LevelChoice("LightningBolt", null, skills["LightningBolt"]));
 			choices["Wizard"] = new List<List<LevelChoice>>();
@@ -261,13 +262,17 @@ namespace RPGAsci
 			}
 			else if (type == "Fighter")
 			{
-				return new Character(18, 7, 5, image, name, 2, 3, type);
+				return new Character(15, 7, 5, image, name, 2, 3, type);
 			}
 			else if (type == "Ranger")
 			{
 				return new Character(13, 5, 4, image, name, 10, 5, type);
 			}
 			return null;
+		}
+		static public Skill GetSkill(string name)
+		{
+			return skills[name.Remove(0,3)];
 		}
 	}
 }

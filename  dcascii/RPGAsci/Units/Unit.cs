@@ -24,13 +24,13 @@ namespace RPGAsci
 		public int currentTalent;
 
 		public Effect currentEffect;
-
+		protected Dictionary<string, Equipment> equipment = new Dictionary<string, Equipment>();
 		public bool defending = false;
 		public StatusEffect currentStatus = StatusEffect.None;
 		public bool usedTurn = false;
 		public int power = 0;
-		public List<Skill> skills = new List<Skill>();
-		public List<Skill> skillsLeft = new List<Skill>();
+		public Dictionary<Skill, int> skills = new Dictionary<Skill, int>();
+		public Dictionary<Skill, int> skillsLeft = new Dictionary<Skill, int>();
 		public Unit(int hp, int attack, int defense, string image, string name, int speed,int talent)
 		{
 			this.hp = hp;
@@ -50,14 +50,22 @@ namespace RPGAsci
 				damage -= 2;
 				damage = Math.Abs(damage);
 			}
+			foreach (KeyValuePair<string, Equipment> pair in equipment)
+			{
+				if (pair.Value != null)
+				{
+					damage -= pair.Value.effect.defense;
+				}
+			}
+			damage = Math.Abs(damage);
 			if (damage > 0)
 			{
 				unit.currentHp -= damage;
 			}
-			Console.Write("- Dealt " + damage + " damage");
+			ConsoleHelper.GameWriteLine("- Dealt " + damage + " damage");
 			if (unit.hp <= 0)
 			{
-				Console.WriteLine(unit.name + " died");
+				ConsoleHelper.GameWriteLine(unit.name + " died");
 			}
 			usedTurn = true;
 		}
@@ -73,10 +81,10 @@ namespace RPGAsci
 			{
 				currentHp -= damage;
 			}
-			ConsoleHelper.Write(name+" got " + damage + " damage",ConsoleColor.DarkRed);
+			ConsoleHelper.GameWriteLine(name + " got " + damage + " damage", ConsoleColor.DarkRed);
 			if (hp <= 0)
 			{
-				ConsoleHelper.WriteLine(name + " died",ConsoleColor.DarkGreen);
+				ConsoleHelper.GameWriteLine(name + " died",ConsoleColor.DarkGreen);
 			}
 		}
 		public virtual int GetPower()

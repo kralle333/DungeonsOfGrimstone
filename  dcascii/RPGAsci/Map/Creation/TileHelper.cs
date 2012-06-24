@@ -40,7 +40,15 @@ namespace RPGAsci
 					return map.tiles[randX, randY];
 				}
 			}
-			return null;
+		}
+		static public double GetDistance2Points(int x1, int y1, int x2, int y2)
+		{
+			return Math.Sqrt(Math.Pow((x1 - x2), 2) + Math.Pow((y1 - y2), 2));
+
+		}
+		static public double GetDistance2Tiles(Tile tile1, Tile tile2)
+		{
+			return GetDistance2Points(tile1.x, tile1.y, tile2.x, tile2.y);
 		}
 	}
 }

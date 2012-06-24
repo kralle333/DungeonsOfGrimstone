@@ -7,9 +7,8 @@ namespace RPGAsci
 {
 	class Door:Tile
 	{
-		public bool unlocked;
 		public bool connected = false;
-		public Corridor corridor = new Corridor();
+		public Corridor doorCorridor = new Corridor();
 
 		public Door(int xPos, int yPos):base(xPos,yPos)
 		{
