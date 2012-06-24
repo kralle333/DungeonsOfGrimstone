@@ -10,14 +10,14 @@ namespace RPGAsci
 		public Tile[,] tiles;
 		public int width = 0;
 		public int height = 0;
-		int heroX = 5;
-		int heroY = 5;
+		int heroX = -1;
+		int heroY = -1;
 		public List<Room> rooms = new List<Room>();
-		public List<MonsterUnit> monsters = new List<MonsterUnit>();
 		public bool inBattle = false;
 		public bool stairwayFound = false;
 		Random random = new Random();
 		MenuItem YesNoMenu;
+		MenuItem targetMenu = new MenuItem("Target:", 0, 0);
 
 		public Map(int width, int height)
 		{
@@ -28,31 +28,23 @@ namespace RPGAsci
 			{
 				for (int y = 0; y < height; y++)
 				{
-					tiles[x, y] = new Tile(x,y);
-					if (y == 0 || x == 0 || y == height - 1 || x == width - 1)
-					{
-						tiles[x, y].type = "OuterWall";
-					}
-					else
-					{
-						tiles[x, y].type = "UnWalkable";
-					}
+					tiles[x, y] = new Tile(x, y);
+					tiles[x, y].type = "UnWalkable";
 				}
 			}
-			YesNoMenu = new MenuItem("Menu",height+1);
+			YesNoMenu = new MenuItem("Menu", 0, 0);
 			YesNoMenu.currentlySelected = true;
 			YesNoMenu.AddChild(new MenuItem("Yes"));
 			YesNoMenu.AddChild(new MenuItem("No"));
 		}
 		public void PlaceHero()
 		{
-			
 			while (true)
 			{
 				Room randomRoom = rooms[random.Next(rooms.Count)];
 				int randX = random.Next(randomRoom.xPos, randomRoom.xPos + randomRoom.width - 1);
 				int randY = random.Next(randomRoom.yPos, randomRoom.yPos + randomRoom.height - 1);
-				if (tiles[randX, randY].type == "Walkable")
+				if (tiles[randX, randY].type == "Walkable" && !tiles[randX, randY].monster)
 				{
 					heroX = randX;
 					heroY = randY;
@@ -76,34 +68,45 @@ namespace RPGAsci
 		}
 		public void DrawTile(int x, int y)
 		{
-			if (Console.CursorLeft != x || Console.CursorTop != y)
+			if (Console.CursorLeft != x + 1 || Console.CursorTop != y + 1)
 			{
-				Console.SetCursorPosition(x, y);
+				Console.SetCursorPosition(x + 1, y + 1);
 			}
-			Console.ResetColor();
-			if (tiles[x, y].light > 0 && tiles[x,y].IsWalkable())
+			//Console.ResetColor();
+			if (tiles[x, y].light > 0 && tiles[x, y].IsWalkable())
 			{
 				switch (tiles[x, y].light)
 				{
-					case 1: Console.BackgroundColor = ConsoleColor.Gray; break;
-					case 2: Console.BackgroundColor = ConsoleColor.White; break;
+					case 1: Console.BackgroundColor = ConsoleColor.DarkGray; break;
+					case 2: Console.BackgroundColor = ConsoleColor.Gray; break;
 				}
 				Console.ForegroundColor = ConsoleColor.Black;
 				if (tiles[x, y].light == 2 && tiles[x, y].monster)
 				{
-					Console.Write('M');
+					Console.BackgroundColor = ConsoleColor.Red;
+					Console.Write(' ');
 				}
 				else if (heroX == x && heroY == y)
 				{
-					Console.Write('X');
+					Console.ForegroundColor = ConsoleColor.Blue;
+					Console.Write('♀');
 				}
 				else
 				{
-					switch (tiles[x, y].type)
+					if (tiles[x, y].item != null)
 					{
-						case "Walkable": Console.Write("-"); break;
-						case "Door": Console.Write("D"); break;
-						case "Stairway": Console.Write("S"); break;
+						Console.BackgroundColor = ConsoleColor.Yellow;
+						Console.Write("#");
+					}
+					else
+					{
+
+						switch (tiles[x, y].type)
+						{
+							case "Walkable": Console.Write("░"); break;
+							case "Door": ConsoleHelper.Write(" ", ConsoleColor.Green); break;
+							case "Stairway": Console.Write("↓"); break;
+						}
 					}
 					Console.ResetColor();
 				}
@@ -111,11 +114,7 @@ namespace RPGAsci
 			else
 			{
 				Console.ResetColor();
-				if (tiles[x, y].type == "OuterWall")
-				{
-					Console.BackgroundColor = ConsoleColor.DarkRed;
-				}
-				else if (tiles[x, y].type == "Wall" && tiles[x,y].light >0)
+				if (tiles[x, y].type == "Wall" && tiles[x, y].light > 0)
 				{
 					Console.BackgroundColor = ConsoleColor.DarkGreen;
 				}
@@ -184,30 +183,146 @@ namespace RPGAsci
 			{
 				if (tiles[heroX, heroY].type == "Stairway")
 				{
-					Console.SetCursorPosition(0, height + 1);
 					YesNoMenu.text = "Go Down?";
 					YesNoMenu.Draw();
 					while (true)
 					{
-						YesNoMenu.ReadInput();
-						YesNoMenu.Draw();
+						YesNoMenu.ReadInput(Console.ReadKey(true));
 						if (YesNoMenu.IsSelected("Yes"))
 						{
 							stairwayFound = true;
+							ConsoleHelper.ClearConsole();
 							break;
 						}
 						else if (YesNoMenu.IsSelected("No"))
 						{
+							ConsoleHelper.ClearConsole();
 							break;
-						}			
+						}
+					}
+				}
+				else if (tiles[heroX, heroY].item != null)
+				{
+					YesNoMenu.text = "Take Item?";
+					YesNoMenu.Draw();
+					while (true)
+					{
+						YesNoMenu.ReadInput(Console.ReadKey(true));
+						if (YesNoMenu.IsSelected("Yes"))
+						{
+							if (Program.party.items.ContainsKey(tiles[heroX, heroY].item))
+							{
+								Program.party.items[tiles[heroX, heroY].item]++;
+							}
+							else
+							{
+								Program.party.items.Add(tiles[heroX, heroY].item, 1);
+							}
+
+							ConsoleHelper.ClearConsole();
+							ConsoleHelper.GameWriteLine(Program.party.name + " picked up item " + tiles[heroX, heroY].item.name);
+							Console.ReadKey(true);
+							ConsoleHelper.ClearConsole();
+							tiles[heroX, heroY].item = null;
+							break;
+						}
+						else if (YesNoMenu.IsSelected("No"))
+						{
+							ConsoleHelper.ClearConsole();
+							break;
+						}
 					}
 				}
 			}
+			else if (kb.Key == ConsoleKey.I)
+			{
+				MenuItem items = new MenuItem("Items:",0,0);
+				foreach (KeyValuePair<Item, int> pair in Program.party.items)
+				{
+					MenuItem item = new MenuItem(pair.Value + "x " + pair.Key.name);
+					if (pair.Value == 0)
+					{
+						item.locked = true;
+					}
+					items.AddChild(item);
+				}
+				items.Draw();
+				
+				while (true)
+				{
+					ConsoleKeyInfo input = Console.ReadKey(true);
+					items.ReadInput(input);
+					
+					if (items.childSelected != null)
+					{
+						break;
+					}
+					else if (input.Key == ConsoleKey.Z)
+					{
+						ConsoleHelper.ClearConsole();
+						return;
+					}
+				}
+				Item currentItem = ItemManager.GetItem(items.GetSelectedItem(1));
+				if (currentItem.target == "All")
+				{
+					foreach (Unit c in Program.party.characters)
+					{
+						ConsoleHelper.ClearConsole();
+						currentItem.Use(c);
+						Console.ReadKey(true);
+					}
+
+					Program.party.items.Remove(currentItem);
+					items.children.Clear();
+					targetMenu.children.Clear();
+					targetMenu.Reset();
+					items.children.Clear();
+					Console.ReadKey(true);
+				}
+				else if (currentItem.target == "Single")
+				{
+					ConsoleHelper.ClearConsole();
+					targetMenu.text = "Target " + currentItem.name + " on who?";
+					foreach (Character c in Program.party.characters)
+					{
+						targetMenu.AddChild(new MenuItem(c.name));
+					}
+					targetMenu.Draw();
+					targetMenu.currentlySelected = true;
+					while (true)
+					{
+						ConsoleKeyInfo input = Console.ReadKey(true);
+						targetMenu.ReadInput(input);
+						MenuItem item = targetMenu.childSelected;
+						if (item != null)
+						{
+							Character target = Program.party.characters.Find(x => x.name == item.text);
+							ConsoleHelper.ClearConsole();
+							currentItem.Use(target);
+							Console.ReadKey(true);
+							Program.party.items.Remove(currentItem);
+							targetMenu.Reset();
+							targetMenu.children.Clear();
+							break;
+						}
+						else if(input.Key == ConsoleKey.Z)
+						{
+							ConsoleHelper.ClearConsole();
+							items.children.Clear();
+							targetMenu.children.Clear();
+							return;
+						}
+					}
+				}
+				ConsoleHelper.ClearConsole();
+			}
+
 			if (tiles[heroX, heroY].monster)
 			{
 				inBattle = true;
 			}
-			
+
 		}
 		public void DrawShadow()
 		{
@@ -237,36 +352,36 @@ namespace RPGAsci
 		}
 		public void DrawLight(int range, int xPos, int yPos)
 		{
-			if (tiles[xPos, yPos].type == "OuterWall" || tiles[xPos,yPos].type == "UnWalkable")
+			if (tiles[xPos, yPos].type == "UnWalkable")
 			{
 				return;
 			}
 			//Draw shadows around the light
 			if (range == 0)
 			{
-				if (tiles[xPos+1, yPos].light == 0)
+				if (xPos + 1 < width && tiles[xPos + 1, yPos].light == 0)
 				{
 					tiles[xPos + 1, yPos].light = 1;
 					DrawTile(xPos + 1, yPos);
 				}
-				else if (tiles[xPos - 1, yPos].light == 0)
+				else if (xPos > 0 && tiles[xPos - 1, yPos].light == 0)
 				{
 					tiles[xPos - 1, yPos].light = 1;
 					DrawTile(xPos - 1, yPos);
 				}
-				else if (tiles[xPos, yPos+1].light == 0)
+				else if (yPos + 1 < height && tiles[xPos, yPos + 1].light == 0)
 				{
-					tiles[xPos, yPos+1].light = 1;
-					DrawTile(xPos, yPos+1);
+					tiles[xPos, yPos + 1].light = 1;
+					DrawTile(xPos, yPos + 1);
 				}
-				else if (tiles[xPos, yPos-1].light == 0)
+				else if (yPos > 0 && tiles[xPos, yPos - 1].light == 0)
 				{
-					tiles[xPos, yPos-1].light = 1;
-					DrawTile(xPos, yPos-1);
+					tiles[xPos, yPos - 1].light = 1;
+					DrawTile(xPos, yPos - 1);
 				}
 				return;
 			}
-			if (xPos > 0 && tiles[xPos - 1, yPos].type != "OuterWall")
+			if (xPos > 0)
 			{
 				if (tiles[xPos - 1, yPos].light != 2)
 				{
@@ -292,7 +407,7 @@ namespace RPGAsci
 					}
 				}
 			}
-			if (xPos + 1 < width && tiles[xPos + 1, yPos].type != "OuterWall")
+			if (xPos + 1 < width)
 			{
 				if (tiles[xPos + 1, yPos].light != 2)
 				{
@@ -317,7 +432,7 @@ namespace RPGAsci
 					}
 				}
 			}
-			if (yPos > 0 && tiles[xPos, yPos - 1].type != "OuterWall")
+			if (yPos > 0)
 			{
 				if (tiles[xPos, yPos - 1].light != 2)
 				{
@@ -343,7 +458,7 @@ namespace RPGAsci
 					}
 				}
 			}
-			if (yPos + 1 < height && tiles[xPos, yPos + 1].type != "OuterWall")
+			if (yPos + 1 < height)
 			{
 				if (tiles[xPos, yPos + 1].light != 2)
 				{

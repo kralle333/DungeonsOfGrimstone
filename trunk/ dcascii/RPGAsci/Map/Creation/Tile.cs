@@ -11,7 +11,8 @@ namespace RPGAsci
 		public string type = "";
 		public int light = 0;
 		public bool monster = false;
-		public bool room = false;
+		public bool room;
+		public Item item;
 		public Corridor corridor = new Corridor();
 		public int x;
 		public int y;

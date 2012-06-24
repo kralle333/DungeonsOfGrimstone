@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace RPGAsci
 {
@@ -17,9 +18,9 @@ namespace RPGAsci
 		public bool over = false;
 		public bool won = false;
 		private bool newTurn = false;
-		public MenuItem battleMenu = new MenuItem("Menu");
-		public MenuItem targetMenu = new MenuItem("Target:");
-		public MenuItem levelUpChoice = new MenuItem("Choose Bonus");
+		public MenuItem battleMenu = new MenuItem("Menu", 0, 0);
+		public MenuItem targetMenu = new MenuItem("Target:", 0, 0);
+		public MenuItem levelUpChoice = new MenuItem("Choose Bonus", 0, 0);
 		private int experience = 0;
 
 		public Battle(List<Monster> monsters, Party party)
@@ -34,16 +35,16 @@ namespace RPGAsci
 			InitMenu();
 			foreach (Character character in remainingCharacters)
 			{
-				character.skillsLeft = new List<Skill>(character.skills);
+				character.skillsLeft = new Dictionary<Skill, int>(character.skills);
 			}
 		}
 		private void InitMenu()
 		{
-			MenuItem a = new MenuItem("Attack");
-			MenuItem s = new MenuItem("Skills");
-			MenuItem i = new MenuItem("Items");
-			MenuItem d = new MenuItem("Defend");
-			MenuItem f = new MenuItem("Flee");
+			MenuItem a = new MenuItem("Attack", "Use your weapon to damage the enemy");
+			MenuItem s = new MenuItem("Skills", "Available skills to use");
+			MenuItem i = new MenuItem("Items", "Available items to use");
+			MenuItem d = new MenuItem("Defend", "Defend for this round, gives a temporary bonus to defense");
+			MenuItem f = new MenuItem("Flee", "Try to flee the battle, you will not get any experience,gold or items");
 			battleMenu.AddChild(a);
 			battleMenu.AddChild(s);
 			battleMenu.AddChild(i);
@@ -54,7 +55,6 @@ namespace RPGAsci
 				a.AddChild(new MenuItem(monster.name));
 			}
 			battleMenu.currentlySelected = true;
-			a.currentlyMarked = true;
 		}
 		public void UpdateTurns()
 		{
@@ -63,289 +63,21 @@ namespace RPGAsci
 			{
 				if (!unit.usedTurn && unit.currentHp > 0)
 				{
+					ConsoleHelper.ClearConsole();
 					if (unit is Monster)
 					{
-						Console.Clear();
-						DrawBattle();
-						Character randCharacter = remainingCharacters[rand.Next(remainingCharacters.Count())];
-						Console.Write(unit.name + " attacked " + randCharacter.name);
-						unit.Attack(randCharacter);
-						if (randCharacter.currentHp <= 0)
+						HandleMonsterTurn(unit);
+						if (remainingCharacters.Count() == 0)
 						{
-							Console.WriteLine("\n" + randCharacter.name + " died!");
-							randCharacter.currentHp = 0;
-							remainingCharacters.Remove(randCharacter);
-							if (remainingCharacters.Count == 0)
-							{
-								Console.WriteLine("Party Lost Battle!");
-								over = true;
-								won = false;
-								return;
-							}
-							break;
+							return;
 						}
-						Console.WriteLine("\n");
-						Console.ReadKey(true);
-						newTurn = false;
 					}
 					else if (unit is Character)
 					{
-						bool usedTurn = false;
-						battleMenu.Reset();
-						battleMenu.currentlySelected = true;
-						battleMenu.children[0].currentlyMarked = true;
-						if (unit.defending)
+						if (HandlePlayerTurn(unit))
 						{
-							unit.defending = false;
+							return;
 						}
-						Console.Clear();
-						DrawBattle();
-						Console.WriteLine(unit.name + "'s turn: What do you want to do?");
-						battleMenu.Draw();
-						while (!usedTurn)
-						{
-							battleMenu.ReadInput();
-							battleMenu.Draw();
-							if (battleMenu.IsSelected("Attack"))
-							{
-								int monsterIndex = battleMenu.IsChildrenPressed("Attack");
-								if (monsterIndex == -1)
-								{
-									continue;
-								}
-								Console.WriteLine();
-								Monster monster = monsters[monsterIndex];
-								Console.Write(unit.name + " attacked " + monster.name);
-								unit.Attack(monster);
-								if (monster.currentHp <= 0)
-								{
-									Console.WriteLine("\n" + monster.name + " died!");
-									experience += monster.power;
-									monsters.Remove(monster);
-									monster.usedTurn = true;
-									battleMenu.RemoveChild(monster.name);
-									if (monsters.Count == 0)
-									{
-										BattleWon();
-										return;
-									}
-								}
-								Console.WriteLine("\n");
-								usedTurn = true;
-								newTurn = false;
-								Console.ReadKey(true);
-								break;
-
-							}
-							else if (battleMenu.IsSelected("Defend"))
-							{
-								unit.defending = true;
-								unit.usedTurn = true;
-								Console.WriteLine();
-								Console.WriteLine(unit.name + " is defending                  ");
-								newTurn = false;
-								usedTurn = true;
-								Console.ReadKey(true);
-								break;
-							}
-							else if (unit.skillsLeft.Count()>0 && battleMenu.IsSelected("Skills"))
-							{
-								MenuItem skills = battleMenu.GetItem("Skills");
-								if (skills.children.Count()>0)
-								{
-									int skillIndex = battleMenu.IsChildrenPressed("Skills");
-									if (skillIndex == -1)
-									{
-										continue;
-									}
-									else
-									{
-										if (unit.skillsLeft[skillIndex].target == "Self")
-										{
-											unit.skillsLeft.RemoveAt(skillIndex);
-											newTurn = false;
-											usedTurn = true;
-											Console.ReadKey(true);
-											break;
-										}
-										else if (unit.skillsLeft[skillIndex].target == "All")
-										{
-											if (unit.skillsLeft[skillIndex].offensive)
-											{
-												foreach (Unit m in monsters)
-												{
-													unit.skillsLeft[skillIndex].Use(unit, m);
-												}
-											}
-											else
-											{
-												foreach (Unit c in remainingCharacters)
-												{
-													unit.skillsLeft[skillIndex].Use(unit, c);
-												}
-											}
-											unit.skillsLeft.RemoveAt(skillIndex);
-											newTurn = false;
-											usedTurn = true;
-											Console.ReadKey(true);
-										}
-										else if (unit.skillsLeft[skillIndex].target == "Single")
-										{
-											targetMenu = new MenuItem("Target " + unit.skillsLeft[skillIndex].name + " on who?");
-											if (unit.skillsLeft[skillIndex].offensive)
-											{
-												foreach (Monster m in monsters)
-												{
-													targetMenu.AddChild(new MenuItem(m.name));
-												}
-											}
-											else
-											{
-												foreach (Character c in remainingCharacters)
-												{
-													targetMenu.AddChild(new MenuItem(c.name));
-												}
-											}
-											battleMenu.Clear();
-											targetMenu.Draw();
-											targetMenu.currentlySelected = true;
-											while (true)
-											{
-												targetMenu.ReadInput();
-												targetMenu.Draw();
-												MenuItem item = targetMenu.childSelected;
-												if (item != null)
-												{
-													if (unit.skillsLeft[skillIndex].offensive)
-													{
-														unit.skillsLeft[skillIndex].Use(unit, monsters.Find(x=>x.name==item.text));
-													}
-													else
-													{
-														unit.skillsLeft[skillIndex].Use(unit, remainingCharacters.Find(x => x.name == item.text));
-													}
-													targetMenu.Clear();
-													break;
-												}
-											}
-										}
-									}
-								}
-								else
-								{
-									foreach (Skill skill in unit.skillsLeft)
-									{
-										skills.AddChild(new MenuItem(skill.name));
-									}
-									battleMenu.Draw();
-								}
-							}
-							else if (party.items.Count()>0 && battleMenu.IsSelected("Items"))
-							{
-								MenuItem items = battleMenu.GetItem("Items");
-								if (items.children.Count() > 0)
-								{
-									int itemIndex = battleMenu.IsChildrenPressed("Items");
-									if (itemIndex == -1)
-									{
-										continue;
-									}
-									 if (party.items[ itemIndex ].target == "Self")
-										{
-											party.items.RemoveAt( itemIndex );
-											newTurn = false;
-											usedTurn = true;
-											Console.ReadKey(true);
-											break;
-										}
-										else if (party.items[ itemIndex ].target == "All")
-										{
-											if (party.items[ itemIndex ].offensive)
-											{
-												foreach (Unit m in monsters)
-												{
-													party.items[ itemIndex ].Use( m);
-												}
-											}
-											else
-											{
-												foreach (Unit c in remainingCharacters)
-												{
-													party.items[ itemIndex ].Use( c);
-												}
-											}
-											party.items.RemoveAt( itemIndex );
-											newTurn = false;
-											usedTurn = true;
-											Console.ReadKey(true);
-										}
-										else if (party.items[ itemIndex ].target == "Single")
-										{
-											targetMenu = new MenuItem("Target " + party.items[ itemIndex ].name + " on who?");
-											if (party.items[ itemIndex ].offensive)
-											{
-												foreach (Monster m in monsters)
-												{
-													targetMenu.AddChild(new MenuItem(m.name));
-												}
-											}
-											else
-											{
-												foreach (Character c in remainingCharacters)
-												{
-													targetMenu.AddChild(new MenuItem(c.name));
-												}
-											}
-											battleMenu.Clear();
-											targetMenu.Draw();
-											targetMenu.currentlySelected = true;
-											while (true)
-											{
-												targetMenu.ReadInput();
-												targetMenu.Draw();
-												MenuItem item = targetMenu.childSelected;
-												if (item != null)
-												{
-													if (party.items[ itemIndex ].offensive)
-													{
-														party.items[ itemIndex ].Use(monsters.Find(x=>x.name==item.text));
-													}
-													else
-													{
-														party.items[ itemIndex ].Use(remainingCharacters.Find(x => x.name == item.text));
-													}
-													targetMenu.Clear();
-													break;
-												}
-											}
-								}
-								else
-								{
-									foreach (Item item in party.items)
-									{
-										items.AddChild(new MenuItem(item.name));
-									}
-								}
-
-							}
-							else if (battleMenu.IsSelected("Flee"))
-							{
-								int monsterPower = 0;
-								foreach (Monster monster in monsters)
-								{
-									monsterPower += monster.GetPower();
-								}
-								if (random.Next(0, (party.power / monsterPower) * 100) >= 50)
-								{
-									Console.WriteLine(party.name + " fled the battle....");
-									Console.ReadKey(true);
-									over = true;
-									won = false;
-								}
-							}
-						}
-						battleMenu.GetItem("Skills").children.Clear();
-						battleMenu.GetItem("Items").children.Clear();
 					}
 				}
 				if (newTurn)
@@ -359,24 +91,423 @@ namespace RPGAsci
 						character.usedTurn = false;
 					}
 					round++;
-					Console.WriteLine(round + ". round started");
+					ConsoleHelper.ClearConsole();
+					ConsoleHelper.GameWriteLine(round + ". round started");
+					Console.ReadKey(true);
 				}
+				if (monsters.Count() == 0)
+				{
+					BattleWon();
+					return;
+				}
+			}
+			Border.DrawStats(party, Program.level);
+		}
+
+		private void HandleMonsterTurn(Unit unit)
+		{
+			ConsoleHelper.ClearConsole();
+			Character randCharacter = remainingCharacters[rand.Next(remainingCharacters.Count())];
+			ConsoleHelper.GameWrite(unit.name + " attacked " + randCharacter.name);
+			unit.Attack(randCharacter);
+			if (randCharacter.currentHp <= 0)
+			{
+				ConsoleHelper.GameWriteLine(randCharacter.name + " died!");
+				randCharacter.currentHp = 0;
+				remainingCharacters.Remove(randCharacter);
+				if (remainingCharacters.Count == 0)
+				{
+					ConsoleHelper.GameWriteLine("Party Lost Battle!");
+					over = true;
+					won = false;
+					return;
+				}
+			}
+			ConsoleHelper.GameWriteLine();
+			Console.ReadKey(true);
+			newTurn = false;
+		}
+		private bool HandlePlayerTurn(Unit unit)
+		{
+			bool usedTurn = false;
+			battleMenu.Reset();
+			battleMenu.currentlySelected = true;
+			if (unit.defending)
+			{
+				unit.defending = false;
+			}
+			battleMenu.text = unit.name + "'s turn: What do you want to do?";
+			battleMenu.Draw();
+			while (!usedTurn)
+			{
+				battleMenu.ReadInput(Console.ReadKey(true));
+				if (battleMenu.IsSelected("Attack"))
+				{
+					usedTurn = HandleAttack(unit);
+				}
+				else if (battleMenu.IsSelected("Defend"))
+				{
+					usedTurn = HandleDefend(unit);
+				}
+				else if (unit.skillsLeft.Count() > 0 && battleMenu.IsSelected("Skills"))
+				{
+					usedTurn = HandleSkillsUse(unit);
+				}
+				else if (party.items.Count() > 0 && battleMenu.IsSelected("Items"))
+				{
+					usedTurn = HandleItemUse(unit);
+				}
+				else if (battleMenu.IsSelected("Flee"))
+				{
+					if (HandleFlee())
+					{
+						return true;
+					}
+					else
+					{
+						usedTurn = true;
+					}
+				}
+			}
+			if (won)
+			{
+				return true;
+			}
+			battleMenu.GetItem("Skills").children.Clear();
+			battleMenu.GetItem("Items").children.Clear();
+			return false;
+		}
+
+		private bool HandleAttack(Unit unit)
+		{
+			int monsterIndex = battleMenu.IsChildrenPressed("Attack");
+			if (monsterIndex == -1)
+			{
+				return false;
+			}
+			ConsoleHelper.GameWriteLine();
+			Monster monster = monsters[monsterIndex];
+			ConsoleHelper.GameWrite(unit.name + " attacked " + monster.name);
+			unit.Attack(monster);
+			Console.ReadKey(true);
+			if (monster.currentHp <= 0)
+			{
+				MonsterKilled(monster);
+			}
+			ConsoleHelper.GameWriteLine();
+			newTurn = false;
+			return true;
+		}
+		private bool HandleSkillsUse(Unit unit)
+		{
+			MenuItem skills = battleMenu.GetItem("Skills");
+			if (skills.children.Count() > 0)
+			{
+				int skillIndex = battleMenu.IsChildrenPressed("Skills");
+				if (skillIndex == -1)
+				{
+					return false;
+				}
+				else
+				{
+					Skill currentSkill = CharacterManager.GetSkill(battleMenu.GetSelectedItem(2));
+					if (currentSkill.target == "Self")
+					{
+						unit.skillsLeft[currentSkill]--;
+						currentSkill.Use(unit, unit);
+						newTurn = false;
+						targetMenu.Reset();
+						targetMenu.children.Clear();
+						Console.ReadKey(true);
+						return true;
+					}
+					else if (currentSkill.target == "All")
+					{
+						if (currentSkill.offensive)
+						{
+							foreach (Monster m in monsters)
+							{
+								ConsoleHelper.ClearConsole();
+								currentSkill.Use(unit, m);
+								Console.ReadKey(true);
+								if (m.currentHp <= 0)
+								{
+									if (MonsterKilled(m))
+									{
+										return true;
+									}
+								}
+							}
+						}
+						else
+						{
+							foreach (Unit c in remainingCharacters)
+							{
+								ConsoleHelper.ClearConsole();
+								currentSkill.Use(unit, c);
+								Console.ReadKey(true);
+							}
+						}
+						unit.skillsLeft[currentSkill]--;
+						newTurn = false;
+						targetMenu.Reset();
+						targetMenu.children.Clear();
+						Console.ReadKey(true);
+						return true;
+					}
+					else if (currentSkill.target == "Single")
+					{
+						ConsoleHelper.ClearConsole();
+						targetMenu.text = "Target " + currentSkill.name + " on who?";
+						if (currentSkill.offensive)
+						{
+							foreach (Monster m in monsters)
+							{
+								targetMenu.AddChild(new MenuItem(m.name));
+							}
+						}
+						else
+						{
+							foreach (Character c in remainingCharacters)
+							{
+								targetMenu.AddChild(new MenuItem(c.name));
+							}
+						}
+						targetMenu.Draw();
+						targetMenu.currentlySelected = true;
+						while (true)
+						{
+							targetMenu.ReadInput(Console.ReadKey(true));
+							MenuItem item = targetMenu.childSelected;
+							if (item != null)
+							{
+								if (currentSkill.offensive)
+								{
+									Monster target = monsters.Find(x => x.name == item.text);
+									ConsoleHelper.ClearConsole();
+									currentSkill.Use(unit, target);
+									Console.ReadKey(true);
+									unit.skillsLeft[currentSkill]--;
+									if (target.currentHp <= 0)
+									{
+										return MonsterKilled(target);
+									}
+								}
+								else
+								{
+									Character target = remainingCharacters.Find(x => x.name == item.text);
+									ConsoleHelper.ClearConsole();
+									currentSkill.Use(unit, target);
+									Console.ReadKey(true);
+									unit.skillsLeft[currentSkill]--;
+								}
+
+								targetMenu.Reset();
+								targetMenu.children.Clear();
+								Console.ReadKey(true);
+								return true;
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach (KeyValuePair<Skill, int> pair in unit.skillsLeft)
+				{
+					MenuItem item = new MenuItem(pair.Value + "x " + pair.Key.name);
+					if (pair.Value == 0)
+					{
+						item.locked = true;
+					}
+					skills.AddChild(item);
+				}
+				skills.DrawChildren();
+			}
+			return false;
+		}
+		private bool HandleDefend(Unit unit)
+		{
+			unit.defending = true;
+			unit.usedTurn = true;
+			ConsoleHelper.GameWriteLine();
+			ConsoleHelper.GameWriteLine(unit.name + " is defending                  ");
+			newTurn = false;
+			Console.ReadKey(true);
+			return true;
+		}
+		private bool HandleItemUse(Unit unit)
+		{
+			MenuItem items = battleMenu.GetItem("Items");
+			if (items.children.Count() > 0)
+			{
+				int itemIndex = battleMenu.IsChildrenPressed("Items");
+				if (itemIndex == -1)
+				{
+					return false;
+				}
+				else
+				{
+					Item currentItem = ItemManager.GetItem(battleMenu.GetSelectedItem(2));
+					if (currentItem.target == "Self")
+					{
+						currentItem.Use(unit);
+						party.items.Remove(currentItem);
+						newTurn = false;
+						Console.ReadKey(true);
+						targetMenu.Reset();
+						targetMenu.children.Clear();
+						return true;
+					}
+					else if (currentItem.target == "All")
+					{
+						if (currentItem.offensive)
+						{
+							foreach (Monster m in monsters)
+							{
+								ConsoleHelper.ClearConsole();
+								currentItem.Use(m);
+								Console.ReadKey(true);
+								if (MonsterKilled(m))
+								{
+									return true;
+								}
+							}
+						}
+						else
+						{
+							foreach (Unit c in remainingCharacters)
+							{
+								ConsoleHelper.ClearConsole();
+								currentItem.Use(c);
+								Console.ReadKey(true);
+							}
+						}
+						party.items.Remove(currentItem);
+						items.children.Clear();
+						newTurn = false;
+
+						targetMenu.children.Clear();
+						targetMenu.Reset();
+						Console.ReadKey(true);
+						return true;
+					}
+					else if (currentItem.target == "Single")
+					{
+						ConsoleHelper.ClearConsole();
+						targetMenu.text = "Target " + currentItem.name + " on who?";
+						if (currentItem.offensive)
+						{
+							foreach (Monster m in monsters)
+							{
+								targetMenu.AddChild(new MenuItem(m.name));
+							}
+						}
+						else
+						{
+							foreach (Character c in remainingCharacters)
+							{
+								targetMenu.AddChild(new MenuItem(c.name));
+							}
+						}
+						targetMenu.Draw();
+						targetMenu.currentlySelected = true;
+						while (true)
+						{
+							targetMenu.ReadInput(Console.ReadKey(true));
+							MenuItem item = targetMenu.childSelected;
+							if (item != null)
+							{
+								if (currentItem.offensive)
+								{
+									Monster target = monsters.Find(x => x.name == item.text);
+									ConsoleHelper.ClearConsole();
+									currentItem.Use(target);
+									Console.ReadKey(true);
+									party.items.Remove(currentItem);
+									targetMenu.Reset();
+									targetMenu.children.Clear();
+
+									if (target.currentHp <= 0)
+									{
+
+										return MonsterKilled(target);
+									}
+								}
+								else
+								{
+									Character target = remainingCharacters.Find(x => x.name == item.text);
+									ConsoleHelper.ClearConsole();
+									currentItem.Use(target);
+									Console.ReadKey(true);
+									party.items.Remove(currentItem);
+								}
+								targetMenu.Reset();
+								targetMenu.children.Clear();
+								return true;
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach (KeyValuePair<Item, int> pair in party.items)
+				{
+					MenuItem item = new MenuItem(pair.Value + "x " + pair.Key.name);
+					if (pair.Value == 0)
+					{
+						item.locked = true;
+					}
+					items.AddChild(item);
+				}
+				items.DrawChildren();
+			}
+			return false;
+		}
+		private bool HandleFlee()
+		{
+			int monsterPower = 0;
+			foreach (Monster monster in monsters)
+			{
+				monsterPower += monster.GetPower();
+			}
+			if (random.Next(0, (party.power / monsterPower) * 100) >= 50)
+			{
+				ConsoleHelper.GameWriteLine(party.name + " tried to flee the battle....");
+				Console.ReadKey(true);
+				ConsoleHelper.GameWriteLine(party.name + " succeded fleeing!");
+				Console.ReadKey(true);
+				over = true;
+				won = true;
+				return true;
+			}
+			else
+			{
+				ConsoleHelper.GameWriteLine(party.name + " tried to flee the battle....");
+				Console.ReadKey(true);
+				ConsoleHelper.GameWriteLine("but " + party.name + " was caught by the enemy!");
+				Console.ReadKey(true);
+				return false;
 			}
 		}
 		private void BattleWon()
 		{
-			Console.WriteLine("Party Won Battle!");
-			Console.WriteLine("Party got " + experience + " experience");
+			ConsoleHelper.ClearConsole();
+			ConsoleHelper.GameWriteLine("Party Won Battle!");
+			ConsoleHelper.GameWriteLine("Party got " + experience + " experience");
 			Console.ReadKey(true);
-			experience /= 3;
+			experience /= remainingCharacters.Count();
 			foreach (Character character in remainingCharacters)
 			{
 				character.experience += experience;
 				if ((character.experience / 1000) * character.level >= 1)
 				{
+					ConsoleHelper.ClearConsole();
+					levelUpChoice.Reset();
 					character.level++;
-					character.experience = 0;
-					Console.WriteLine(character.name + " reached level " + character.level);
+					character.experience = (character.experience % 1000);
+					ConsoleHelper.GameWriteLine(character.name + " reached level " + character.level);
 					Console.ReadKey(true);
 					CharacterManager.SetLevelChanges(character);
 					List<string> choices = CharacterManager.GetLevelChoices(character);
@@ -384,21 +515,15 @@ namespace RPGAsci
 					{
 						continue;
 					}
-					levelUpChoice = new MenuItem("Choose Bonus");
-					levelUpChoice.currentlySelected = true;
+					levelUpChoice.children.Clear();
 					for (int i = 0; i < choices.Count(); i++)
 					{
 						levelUpChoice.AddChild(new MenuItem(choices[i]));
-						if (i == 0)
-						{
-							levelUpChoice.children[i].currentlyMarked = true;
-						}
 					}
 					levelUpChoice.Draw();
 					while (true)
 					{
-						levelUpChoice.ReadInput();
-						levelUpChoice.Draw();
+						levelUpChoice.ReadInput(Console.ReadKey(true));
 						string choice = levelUpChoice.GetSelectedItem(1);
 						if (choice != "")
 						{
@@ -409,42 +534,99 @@ namespace RPGAsci
 				}
 
 			}
+			foreach (Character c in party.characters)
+			{
+				if (c.currentHp == 0)
+				{
+					c.currentHp = 1;
+				}
+				c.usedTurn = false;
+			}
 			over = true;
 			won = true;
 		}
+		private bool MonsterKilled(Monster m)
+		{
+			ConsoleHelper.GameWriteLine(m.name + " died!");
+			Console.ReadKey(true);
+			experience += m.power;
+			monsters.Remove(m);
+			m.usedTurn = true;
+			battleMenu.RemoveChild(m.name);
+			DrawBattle();
+			if (monsters.Count == 0)
+			{
+				BattleWon();
+				return true;
+			}
+			return false;
+		}
 		public void DrawBattle()
 		{
-			Console.Write("\n \n     ");
-			foreach (Monster monster in monsters)
+
+			int cursorSize = Console.CursorSize;
+			Console.SetCursorPosition(10, 10);
+			/*foreach(Monster monster in monsters)
 			{
-				Console.Write(monster.name);
-				Console.Write("		");
-			}
-			Console.Write("\n     ");
-			foreach (Monster monster in monsters)
+				
+				ConsoleHelper.PaddedWriteLine((4-(monsters.Count() /3)) *6, monster.name, ' ');
+			}*/
+			ConsoleHelper.ClearMainFrame();
+			if (monsters.Count() > 0)
 			{
-				Console.Write(monster.image);
-				ConsoleHelper.WriteBlanks(monster.name.Length);
+				int drawXIndex = 10;
+				int drawXAdd = ((Border.MainFrameWidth - 20) / monsters.Count()) - 5 * monsters.Count();
+				foreach (Monster monster in monsters)
+				{
+					string file;
+					if (File.Exists("Art//Monsters//" + monster.image))
+					{
+						file = "Art//Monsters//" + monster.image;
+						string line;
+						int currentLine = 10;
+						int width = 0;
+						using (StreamReader reader = new StreamReader(file))
+						{
+							while ((line = reader.ReadLine()) != null)
+							{
+								Console.SetCursorPosition(drawXIndex, currentLine);
+								foreach (Char c in line.ToCharArray())
+								{
+									if (c == '0')
+									{
+										Console.BackgroundColor = ConsoleColor.Black;
+										Console.Write(' ');
+									}
+									else if (c == '1')
+									{
+										Console.BackgroundColor = ConsoleColor.White;
+										Console.Write(' ');
+									}
+									else if (c == '2')
+									{
+										Console.BackgroundColor = ConsoleColor.Gray;
+										Console.Write(' ');
+									}
+									else if (c == '3')
+									{
+										Console.BackgroundColor = ConsoleColor.Yellow;
+										Console.Write(' ');
+									}
+									else if (c == '4')
+									{
+										Console.BackgroundColor = ConsoleColor.Green;
+										Console.Write(' ');
+									}
+									width = line.ToCharArray().Length;
+								}
+								currentLine++;
+							}
+						}
+						drawXIndex += drawXAdd + width + (15 - width);
+						Console.ResetColor();
+					}
+				}
 			}
-			Console.Write("\n \n \n \n     ");
-			foreach (Character character in party.characters)
-			{
-				Console.Write(character.name);
-				Console.Write("	    ");
-			}
-			Console.Write("\n     ");
-			foreach (Character character in party.characters)
-			{
-				Console.Write(character.image);
-				 ConsoleHelper.WriteBlanks (character.name.Length);
-			}
-			Console.Write("\n     ");
-			foreach (Character character in party.characters)
-			{
-				Console.Write("HP: " + character.currentHp);
-				Console.Write("	    ");
-			}
-			Console.WriteLine("\n");
 		}
 	}
 }

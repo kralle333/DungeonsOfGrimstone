@@ -10,8 +10,8 @@ namespace RPGAsci
 		public int power = 0;
 		public string name = "";
 		public List<Character> characters = new List<Character>();
-		public List<Item> items = new List<Item>();
-
+		public Dictionary<Item, int> items = new Dictionary<Item, int>();
+		public Dictionary<Equipment, int> equipment = new Dictionary<Equipment, int>();
 		public void CalculateAndSavePartyStrength()
 		{
 

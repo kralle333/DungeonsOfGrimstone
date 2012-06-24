@@ -22,7 +22,7 @@ namespace RPGAsci
 		}
 		public void Use(Unit user,Unit target)
 		{
-			Console.WriteLine(user.name + " used " + name + " on " + target.name);
+			ConsoleHelper.GameWriteLine(user.name + " used " + name + " on " + target.name);
 			effect.Apply(target);
 		}
 	}

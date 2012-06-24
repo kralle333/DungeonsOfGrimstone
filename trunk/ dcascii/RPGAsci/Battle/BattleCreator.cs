@@ -18,7 +18,8 @@ namespace RPGAsci
 			int partyPower = party.GetPowerLevel();
 			int monsterPackPower = 0;
 			Monster currentMonster;
-			while (partyPower-monsterPackPower > 0 && monsters.Count()<3)
+			indexes.Clear();
+			while (3000*level-monsterPackPower > 0 && monsters.Count()<3)
 			{
 				currentMonster = mc.GetMonster(level,partyPower);
 				if (!indexes.ContainsKey(currentMonster.name))
@@ -42,6 +43,7 @@ namespace RPGAsci
 			{
 				c.name += "(A)";
 			}
+			
 			return new Battle(monsters, party);
 		}
 	}
