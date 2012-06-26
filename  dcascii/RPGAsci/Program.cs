@@ -80,9 +80,13 @@ namespace RPGAsci
 		static void CreateParty()
 		{
 			MenuItem classSelectionMenu = new MenuItem("Select a class:",0,0);
-			classSelectionMenu.AddChild(new MenuItem("Fighter","A powerful warrior, that uses psychical attacks to kill the enemy"));
-			classSelectionMenu.AddChild(new MenuItem("Wizard","Uses spells to heal the party and to damage foes"));
-			classSelectionMenu.AddChild(new MenuItem("Ranger","Fast and able to inflict status effect and support the party"));
+			classSelectionMenu.AddChild(new MenuItem("Adventurer","A powerful fighter, that uses psychical attacks to kill the enemy"));
+			classSelectionMenu.AddChild(new MenuItem("Blacksmith", "Very strong, but also misses a lot, especially if he has been drinking"));
+			classSelectionMenu.AddChild(new MenuItem("Ranger","An expert in dungeons. Uses status effecting attacks and eats strange mushrooms"));
+			classSelectionMenu.AddChild(new MenuItem("Octonoid","By praying to the octopuss god Catulu he have gained the appearance of an octopuss"));
+			classSelectionMenu.AddChild(new MenuItem("Retiree", "Old grumpy person that spends all that extra freetime on fighting in dungeons"));
+			classSelectionMenu.AddChild(new MenuItem("Nurse", "Uses spells to heal the party and to damage foes"));
+			classSelectionMenu.AddChild(new MenuItem("Thief", "Fast and able to bring your party some extra gold"));
 
 			MenuItem portraitSelection = new MenuItem("Choose your portrait", 0, 0);
 			portraitSelection.AddChild(new MenuItem("Y_Y"));
@@ -134,26 +138,16 @@ namespace RPGAsci
 					string classType = classSelectionMenu.GetSelectedItem(1);
 					if (classType != "")
 					{
-						party.characters.Add(CharacterManager.CreateCharacter(classType, name, image));
-						break;
-					}
-				}
-				ConsoleHelper.ClearConsole();
-				levelUpChoice.children.Clear();
-				List<string> choices = CharacterManager.GetLevelChoices(party.characters[i]);
-				for (int j = 0; j < choices.Count(); j++)
-				{
-					levelUpChoice.AddChild(new MenuItem(choices[j]));
-				}
-				levelUpChoice.Draw();
-				while (true)
-				{
-					levelUpChoice.ReadInput(Console.ReadKey(true));
-					string choice = levelUpChoice.GetSelectedItem(1);
-					if (choice != "")
-					{
-						CharacterManager.SetChoice(party.characters[i], choice);
-						break;
+						switch (classType)
+						{
+							case "Adventurer": party.characters.Add(new Adventurer(image, name)); break;
+							case "Retiree": party.characters.Add(new Retiree(image, name)); break;
+							case "Ranger": party.characters.Add(new Ranger(image, name)); break;
+							case "Thief": party.characters.Add(new Thief(image, name)); break;
+							case "Octonoid": party.characters.Add(new Octonoid(image, name)); break;
+							case "Nurse": party.characters.Add(new Nurse(image, name)); break;
+							case "BlackSmith": party.characters.Add(new BlackSmith(image, name)); break;
+						}
 					}
 				}
 			}

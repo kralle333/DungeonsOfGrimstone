@@ -46,6 +46,7 @@
     <Compile Include="Battle\Battle.cs" />
     <Compile Include="Battle\BattleCreator.cs" />
     <Compile Include="Battle\MonsterCreator.cs" />
+    <Compile Include="Units\Characters\BlackSmith.cs" />
     <Compile Include="Border.cs" />
     <Compile Include="ConsoleHelper.cs" />
     <Content Include="Art\Characters\chars.txt">
@@ -60,6 +61,15 @@
     <Content Include="IntroLogo.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Map\MonsterUnit.cs" />
+    <Compile Include="Units\Characters\Nurse.cs" />
+    <Compile Include="Units\Characters\Ranger.cs" />
+    <Compile Include="SkillTree.cs" />
+    <Compile Include="SkillNode.cs" />
+    <Compile Include="Units\Characters\Retiree.cs" />
+    <Compile Include="Units\Characters\Thief.cs" />
+    <Compile Include="Units\Characters\Adventurer.cs" />
+    <Compile Include="Units\Characters\Octonoid.cs" />
     <Compile Include="Units\Usables\Effect.cs" />
     <Compile Include="HeroStats.cs" />
     <Compile Include="Units\Usables\Equipment.cs" />
@@ -74,8 +84,8 @@
     <Compile Include="MenuSystem\MenuItem.cs" />
     <Compile Include="Map\Creation\Tile.cs" />
     <Compile Include="Map\Creation\Room.cs" />
-    <Compile Include="Units\Character.cs" />
-    <Compile Include="Units\CharacterManager.cs" />
+    <Compile Include="Units\Characters\Character.cs" />
+    <Compile Include="Units\Characters\CharacterManager.cs" />
     <Compile Include="Units\Monster.cs" />
     <Compile Include="Units\Party.cs" />
     <Compile Include="Program.cs" />

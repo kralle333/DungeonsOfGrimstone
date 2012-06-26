@@ -9,6 +9,8 @@ namespace RPGAsci
 	{
 		Confusion,
 		Sleep,
+		Poison,
+		CurePoison,
 		CureConfusion,
 		CureSleep,
 		CureAll,

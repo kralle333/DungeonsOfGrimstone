@@ -56,7 +56,7 @@ namespace RPGAsci
 					Console.SetCursorPosition(81, j + 15 * i + 4);
 					switch (j)
 					{
-						case 1: ConsoleHelper.PaddedWriteLine(18, party.characters[i].name + " the " + party.characters[i].classType, ' '); break;
+						case 1: ConsoleHelper.PaddedWriteLine(18, party.characters[i].name + " the " + party.characters[i].ToString(), ' '); break;
 						case 2: ConsoleHelper.PaddedWriteLine(18, "Level: " + party.characters[i].level, ' '); break;
 						case 5: if (party.characters[i].currentHp > 0) { ConsoleHelper.PaddedWriteLine(18, party.characters[i].image, ' '); } else { ConsoleHelper.PaddedWriteLine(18, "X_x", ' '); } break;
 						case 10: ConsoleHelper.PaddedWriteLine(18, "Hp: " + party.characters[i].currentHp+"/"+party.characters[i].hp, ' '); break;
