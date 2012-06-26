@@ -15,6 +15,7 @@ namespace RPGAsci
 		public List<Room> rooms = new List<Room>();
 		public bool inBattle = false;
 		public bool stairwayFound = false;
+		public List<MonsterUnit> monsters = new List<MonsterUnit>();
 		Random random = new Random();
 		MenuItem YesNoMenu;
 		MenuItem targetMenu = new MenuItem("Target:", 0, 0);
@@ -44,7 +45,7 @@ namespace RPGAsci
 				Room randomRoom = rooms[random.Next(rooms.Count)];
 				int randX = random.Next(randomRoom.xPos, randomRoom.xPos + randomRoom.width - 1);
 				int randY = random.Next(randomRoom.yPos, randomRoom.yPos + randomRoom.height - 1);
-				if (tiles[randX, randY].type == "Walkable" && !tiles[randX, randY].monster)
+				if (tiles[randX, randY].type == "Walkable" && tiles[randX, randY].monster == null)
 				{
 					heroX = randX;
 					heroY = randY;
@@ -81,10 +82,10 @@ namespace RPGAsci
 					case 2: Console.BackgroundColor = ConsoleColor.Gray; break;
 				}
 				Console.ForegroundColor = ConsoleColor.Black;
-				if (tiles[x, y].light == 2 && tiles[x, y].monster)
+				if (tiles[x, y].light == 2 && tiles[x, y].monster != null)
 				{
-					Console.BackgroundColor = ConsoleColor.Red;
-					Console.Write(' ');
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.Write('Ö');
 				}
 				else if (heroX == x && heroY == y)
 				{
@@ -132,7 +133,40 @@ namespace RPGAsci
 		}
 		public void MoveMonsters()
 		{
-
+			foreach (MonsterUnit unit in monsters)
+			{
+				if (tiles[unit.x, unit.y].light == 2)
+				{
+					List<Tile> adjTiles = TileHelper.GetAdjacentTiles(unit.x, unit.y, this);
+					Tile bestTile = adjTiles[0];
+					double distance = 50000;
+					foreach (Tile tile in adjTiles)
+					{
+						double currentDistance = TileHelper.GetDistance2Tiles(tile, tiles[unit.x, unit.y]);
+						if (currentDistance < distance)
+						{
+							bestTile = tile;
+							distance = currentDistance;
+						}
+					}
+					tiles[unit.x, unit.y].monster = null;
+					bestTile.monster = unit;
+					unit.x = bestTile.x;
+					unit.y = bestTile.y;
+				}
+				else
+				{
+					List<Tile> adjTiles = TileHelper.GetAdjacentTiles(unit.x, unit.y, this);
+					if (adjTiles.Count() > 0)
+					{
+						Tile randomTile = adjTiles[random.Next(adjTiles.Count())];
+						tiles[unit.x, unit.y].monster = null;
+						randomTile.monster = unit;
+						unit.x = randomTile.x;
+						unit.y = randomTile.y;
+					}
+				}
+			}
 		}
 		public void ReadInput()
 		{
@@ -318,7 +352,7 @@ namespace RPGAsci
 				ConsoleHelper.ClearConsole();
 			}
 
-			if (tiles[heroX, heroY].monster)
+			if (tiles[heroX, heroY].monster != null)
 			{
 				inBattle = true;
 			}
@@ -348,7 +382,7 @@ namespace RPGAsci
 		}
 		public void RemoveMonsterAfterBattle()
 		{
-			tiles[heroX, heroY].monster = false;
+			tiles[heroX, heroY].monster = null;
 		}
 		public void DrawLight(int range, int xPos, int yPos)
 		{

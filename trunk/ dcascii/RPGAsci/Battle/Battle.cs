@@ -509,28 +509,7 @@ namespace RPGAsci
 					character.experience = (character.experience % 1000);
 					ConsoleHelper.GameWriteLine(character.name + " reached level " + character.level);
 					Console.ReadKey(true);
-					CharacterManager.SetLevelChanges(character);
-					List<string> choices = CharacterManager.GetLevelChoices(character);
-					if (choices.Count() == 0)
-					{
-						continue;
-					}
-					levelUpChoice.children.Clear();
-					for (int i = 0; i < choices.Count(); i++)
-					{
-						levelUpChoice.AddChild(new MenuItem(choices[i]));
-					}
-					levelUpChoice.Draw();
-					while (true)
-					{
-						levelUpChoice.ReadInput(Console.ReadKey(true));
-						string choice = levelUpChoice.GetSelectedItem(1);
-						if (choice != "")
-						{
-							CharacterManager.SetChoice(character, choice);
-							break;
-						}
-					}
+					character.SetLevelChanges();
 				}
 
 			}

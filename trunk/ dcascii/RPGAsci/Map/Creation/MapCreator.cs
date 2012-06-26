@@ -751,7 +751,8 @@ namespace RPGAsci
 			while (numberOfMonsters > 0)
 			{
 				Tile tile = TileHelper.GetRandomTileOfType(map, "Walkable");
-				tile.monster = true;
+				tile.monster = new MonsterUnit(tile.x,tile.y);
+				map.monsters.Add(tile.monster);
 				numberOfMonsters--;
 			}
 		}
@@ -761,7 +762,7 @@ namespace RPGAsci
 			while (numberOfItems > 0)
 			{
 				Tile tile = TileHelper.GetRandomTileOfType(map, "Walkable");
-				if (tile.monster == false)
+				if (tile.monster == null)
 				{
 					tile.item = ItemManager.GetRandomItem(level);
 				}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RPGAsci
 {
@@ -19,7 +20,16 @@ namespace RPGAsci
 		}
 		static public Item GetItem(string name)
 		{
-			return items[name.Remove(0, 3)];
+			Regex r = new Regex("[0-9]");
+			Match match = r.Match(name);
+			if (match.Success)
+			{
+				return items[name.Remove(0, 3)];
+			}
+			else
+			{
+				return items[name];
+			}
 		}
 		static public Item GetRandomItem(int level)
 		{

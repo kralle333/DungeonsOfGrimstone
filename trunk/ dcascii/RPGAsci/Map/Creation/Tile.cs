@@ -10,7 +10,7 @@ namespace RPGAsci
 		public char image = '-';
 		public string type = "";
 		public int light = 0;
-		public bool monster = false;
+		public MonsterUnit monster;
 		public bool room;
 		public Item item;
 		public Corridor corridor = new Corridor();
