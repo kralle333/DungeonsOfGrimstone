@@ -7,8 +7,9 @@ namespace RPGAsci
 {
 	public class SkillNode
 	{
-		public List<SkillNode> required = new List<SkillNode>();
-		Skill skill;
+		public Dictionary<Skill,int> requiredSkills = new Dictionary<Skill,int>();
+		public List<SkillNode> children = new List<SkillNode>();
+		public Skill skill;
 		int level = 0;
 		bool available = false;
 

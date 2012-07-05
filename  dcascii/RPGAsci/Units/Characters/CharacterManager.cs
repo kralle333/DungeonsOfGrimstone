@@ -51,7 +51,7 @@ namespace RPGAsci
 			skills["PoisonSlime"] = new Skill(true,"Single","PoisonSlime",null,0.7f);
 			skills["MultiTentacleMassage"] = new Skill(false,"All","MultenticaleMassage",new Effect(15,false),1f);
 			
-			//BlackSmithstring image,string name
+			//BlackSmith
 			skills["MightyBlow"] = new Skill(true, "Single", "MightyBlow", new Effect(10),0.5f);
 			skills["ExplosiveAnger"] = new Skill(true, "All", "ExplosiveAnger", new Effect(30), 0.3f);
 			skills["SpecialBooze"] = new Skill(false, "Self", "SpecialBooze", new Effect(0,0, 5, 0, -3, 0, StatusEffect.None, false, 3),1f);
