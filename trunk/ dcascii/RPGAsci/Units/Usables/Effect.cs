@@ -84,22 +84,22 @@ namespace RPGAsci
 				if (attack > 0)
 				{
 					unit.currentAttack += attack;
-					ConsoleHelper.GameWriteLine(unit.name + "'s attack was raised by " + attack, ConsoleColor.Green);
+					ConsoleHelper.GameWriteLine(unit.name + "'s attack was raised by " + attack, ConsoleColor.DarkGreen);
 				}
 				if (defense > 0)
 				{
 					unit.currentDefense += defense;
-					ConsoleHelper.WriteLine(unit.name + "'s defense was raised by " + defense, ConsoleColor.Green);
+					ConsoleHelper.WriteLine(unit.name + "'s defense was raised by " + defense, ConsoleColor.DarkGreen);
 				}
 				if (speed > 0)
 				{
 					unit.currentSpeed += speed;
-					ConsoleHelper.GameWriteLine(unit.name + "'s speed was raised by " + speed, ConsoleColor.Green);
+					ConsoleHelper.GameWriteLine(unit.name + "'s speed was raised by " + speed, ConsoleColor.DarkGreen);
 				}
 				if (talent > 0)
 				{
 					unit.currentTalent += talent;
-					ConsoleHelper.GameWriteLine(unit.name + "'s talent was raised by " + talent, ConsoleColor.Green);
+					ConsoleHelper.GameWriteLine(unit.name + "'s talent was raised by " + talent, ConsoleColor.DarkGreen);
 				}
 			}
 			if (damage > 0)

@@ -9,14 +9,14 @@ namespace RPGAsci
 	{
 		public int experience = 0;
 		public int level = 1;
-		public struct LevelUpGrowthRate
+		public struct CharacterGrowthRate
 		{
 			public float hp;
 			public float attack;
 			public float defense;
 			public float speed;
 			public float talent;
-			public LevelUpGrowthRate(float hp, float attack, float defense, float speed, float talent)
+			public CharacterGrowthRate(float hp, float attack, float defense, float speed, float talent)
 			{
 				this.hp = hp;
 				this.attack = attack;
@@ -26,14 +26,16 @@ namespace RPGAsci
 			}
 		}
 		public SkillTree skillTree = new SkillTree();
-		public LevelUpGrowthRate growthRate;
-		
+		public CharacterGrowthRate growthRate;
+		public int skillPoints = 0;
+		public string classType = "Unknown";
 		public Character(int hp, int attack, int defense, string image, string name, int speed, int talent)
 			: base(hp, attack, defense, image, name, speed, talent)
 		{
 			equipment["Armor1"] = EquipmentManager.GetEquipment("Common Cap");
 			equipment["Armor2"] = EquipmentManager.GetEquipment("Common Shirt");
 			equipment["Armor3"] = EquipmentManager.GetEquipment("Common Pants");
+			skillPoints =1;
 		}
 		public void SetLevelChanges()
 		{
@@ -50,6 +52,24 @@ namespace RPGAsci
 			defense = newDefense;
 			speed = newSpeed;
 			talent = newTalent;
+		}
+		public void LevelUpSkill(Skill skill)
+		{
+			bool skillIsOwned = false;
+			foreach (KeyValuePair<Skill, int> pair in skills)
+			{
+				if (pair.Key.name == skill.name)
+				{
+					pair.Key.LevelUp();
+					skills[pair.Key] = pair.Key.level * skill.growthRate.numberOfSkills;
+					skillIsOwned = true;
+					break;
+				}
+			}
+			if (!skillIsOwned)
+			{
+				skills[skill] = 1;
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace RPGAsci
 {
@@ -18,7 +19,7 @@ namespace RPGAsci
 			public int speedMultiplier;
 			public int talentMultiplier;
 
-			public MonsterTemplate(string image, string name, ConsoleColor color, int hpMultiplier,int attackMultiplier, int defenseMultiplier, int speedMultiplier,int talentMultiplier)
+			public MonsterTemplate(string image, string name, ConsoleColor color, int hpMultiplier, int attackMultiplier, int defenseMultiplier, int speedMultiplier, int talentMultiplier)
 			{
 				this.image = image;
 				this.name = name;
@@ -36,32 +37,38 @@ namespace RPGAsci
 		{
 			InitMonsterTypes();
 		}
-		public Monster GetMonster(int level,int maxPower)
+		public Monster GetMonster(int level)
 		{
-			int monsterPower = maxPower;
-			Monster monster;
-			MonsterTemplate template;
-			while (monsterPower >= maxPower)
+			string monsterFile = "";
+			if (level <= 5)
 			{
-				template = monsterTypes[random.Next(monsterTypes.Count())];
-				monster = new Monster(random.Next(10 * level, 20 * level) * template.hpMultiplier,
-					random.Next(2 * level, 5 * level) * template.attackMultiplier,
-					random.Next(2 * level, 4 * level) * template.defenseMultiplier,
-					template.image,
-					template.name,
-					template.speedMultiplier * 4,template.talentMultiplier*3);
-				monster.color = template.color;
-				monsterPower = monster.GetPower();
-				if (monsterPower < maxPower)
+				monsterFile = "Data/Level5.txt";
+			}
+			string[] monsterInfo = File.ReadAllLines(monsterFile);
+			int currentMonster = random.Next(0, level + 1) * (level / 10 + 1) * 7;
+			string monsterName = monsterInfo[currentMonster];
+			string image = "";
+			string file;
+			int widthOfLine = 0;
+			if (File.Exists("Art/Monsters/" + monsterName+".txt"))
+			{
+				file = "Art/Monsters/" + monsterName + ".txt";
+				string line;
+				using (StreamReader reader = new StreamReader(file))
 				{
-					return monster;
+					while ((line = reader.ReadLine()) != null)
+					{
+						image += line;
+						image += "\n";
+						widthOfLine = line.Length;	
+					}
 				}
 			}
-			return null;
+			return new Monster(Int32.Parse(monsterInfo[currentMonster + 1]), Int32.Parse(monsterInfo[currentMonster + 2]), Int32.Parse(monsterInfo[currentMonster + 3]), image, widthOfLine,monsterName, Int32.Parse(monsterInfo[currentMonster + 4]), Int32.Parse(monsterInfo[currentMonster + 5]),Int32.Parse(monsterInfo[currentMonster + 6]));
 		}
 		private void InitMonsterTypes()
 		{
-			monsterTypes.Add(new MonsterTemplate("bat.txt", "Bat", ConsoleColor.DarkGreen, 1,1, 1, 1,1));
+			monsterTypes.Add(new MonsterTemplate("bat.txt", "Bat", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
 			monsterTypes.Add(new MonsterTemplate("slime.txt", "Slime", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
 			//monsterTypes.Add(new MonsterTemplate(">*_*<", "Butterfly", ConsoleColor.Blue, 1,1, 1, 2,1));
 			//monsterTypes.Add(new MonsterTemplate("^(0v0)^", "Owl", ConsoleColor.Gray, 2,2, 1, 2,1));

@@ -36,6 +36,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,16 +48,26 @@
     <Compile Include="Battle\Battle.cs" />
     <Compile Include="Battle\BattleCreator.cs" />
     <Compile Include="Battle\MonsterCreator.cs" />
+    <Compile Include="Music\MusicForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Music\MusicForm.Designer.cs">
+      <DependentUpon>MusicForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Music\MusicRegistry.cs" />
     <Compile Include="Units\Characters\BlackSmith.cs" />
-    <Compile Include="Border.cs" />
-    <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="ConsoleDrawing\Border.cs" />
+    <Compile Include="ConsoleDrawing\ConsoleHelper.cs" />
     <Content Include="Art\Characters\chars.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Art\Monsters\bat.txt">
+    <Content Include="Art\Monsters\Bat.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Art\Monsters\slime.txt">
+    <Content Include="Art\Monsters\Slime.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\Level5.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="IntroLogo.txt">
@@ -64,14 +76,13 @@
     <Compile Include="Map\MonsterUnit.cs" />
     <Compile Include="Units\Characters\Nurse.cs" />
     <Compile Include="Units\Characters\Ranger.cs" />
-    <Compile Include="SkillTree.cs" />
-    <Compile Include="SkillNode.cs" />
+    <Compile Include="ConsoleDrawing\SkillTree.cs" />
+    <Compile Include="ConsoleDrawing\SkillNode.cs" />
     <Compile Include="Units\Characters\Retiree.cs" />
     <Compile Include="Units\Characters\Thief.cs" />
     <Compile Include="Units\Characters\Adventurer.cs" />
     <Compile Include="Units\Characters\Octonoid.cs" />
     <Compile Include="Units\Usables\Effect.cs" />
-    <Compile Include="HeroStats.cs" />
     <Compile Include="Units\Usables\Equipment.cs" />
     <Compile Include="Units\Usables\EquipmentManager.cs" />
     <Compile Include="Units\Usables\Item.cs" />
@@ -81,19 +92,22 @@
     <Compile Include="Map\Creation\Door.cs" />
     <Compile Include="Map\Creation\MapCreator.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="MenuSystem\MenuItem.cs" />
+    <Compile Include="ConsoleDrawing\MenuItem.cs" />
     <Compile Include="Map\Creation\Tile.cs" />
     <Compile Include="Map\Creation\Room.cs" />
     <Compile Include="Units\Characters\Character.cs" />
     <Compile Include="Units\Characters\CharacterManager.cs" />
-    <Compile Include="Units\Monster.cs" />
+    <Compile Include="Battle\Monster.cs" />
     <Compile Include="Units\Party.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Units\Usables\Skill.cs" />
     <Compile Include="Units\Unit.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Audio\Music\" />
+    <Folder Include="Audio\Sounds\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

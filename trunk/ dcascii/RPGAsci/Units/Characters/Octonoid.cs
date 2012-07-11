@@ -9,7 +9,9 @@ namespace RPGAsci
 	{
 		public Octonoid(string image, string name):base(16, 4, 8, image, name, 1, 1)
 		{
-			growthRate = new LevelUpGrowthRate(0.3f, 0.2f, 0.2f, 0.1f, 0.2f);
+			classType = "Octonoid";
+			growthRate = new CharacterGrowthRate(0.3f, 0.2f, 0.2f, 0.1f, 0.2f);
+			skillTree.FinalizeTree(this);
 		}
 	}
 }

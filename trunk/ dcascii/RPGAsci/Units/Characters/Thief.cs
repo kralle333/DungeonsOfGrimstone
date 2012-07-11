@@ -9,9 +9,10 @@ namespace RPGAsci
 	{
 		public Thief(string image, string name):base(11, 3, 3, image, name, 6, 10)
 		{
-			growthRate = new LevelUpGrowthRate(0.2f, 0.2f, 0.1f, 0.4f, 0.3f);
-			skillTree.AddNode(Character.GetSkill("LockPicking"));
-			
+			classType = "Thief";
+			growthRate = new CharacterGrowthRate(0.2f, 0.2f, 0.1f, 0.4f, 0.3f);
+			skillTree.AddNode(CharacterManager.GetSkill("LockPicking"),"Lets you pick locks in the dungeon");
+			skillTree.FinalizeTree(this);
 		}
 	}
 }

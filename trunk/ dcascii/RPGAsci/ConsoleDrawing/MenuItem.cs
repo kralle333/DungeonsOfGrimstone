@@ -5,7 +5,7 @@ using System.Text;
 
 namespace RPGAsci
 {
-	class MenuItem
+	public class MenuItem
 	{
 		int level = 0;
 		MenuItem parent;
@@ -15,13 +15,18 @@ namespace RPGAsci
 		public bool currentlyMarked = false;
 		public bool currentlySelected = false;
 		public string text;
-		private int index = 0;
+		public int index = 0;
+		private int scrollIndex = 0;
+		private int lastDrawnIndex = 0;
+		private bool firstIndexSeen = true;
+		private bool lastIndexSeen = false;
 		private int currentLevel = 1;
 		private int consoleY = -1;
 		private int consoleX = -1;
 		public bool locked = false;
 		public int width = 0;
 		public bool showingDescription = false;
+		public bool scrollable = false;
 		public string description;
 
 		public MenuItem(string text)
@@ -71,6 +76,10 @@ namespace RPGAsci
 						index--;
 						children[index].currentlyMarked = true;
 						childMarked = children[index];
+						if (scrollable && !firstIndexSeen && index == 1)
+						{
+							scrollIndex--;
+						}
 						ConsoleHelper.GameClearLine();
 						DrawChildren();
 					}
@@ -81,6 +90,10 @@ namespace RPGAsci
 						children[index].currentlyMarked = true;
 						childMarked = children[index];
 						ConsoleHelper.GameClearLine();
+						if (scrollable && !lastIndexSeen && lastDrawnIndex == index)
+						{
+							scrollIndex++;
+						}
 						DrawChildren();
 					}
 					else if (kb.Key == ConsoleKey.Z)
@@ -164,22 +177,46 @@ namespace RPGAsci
 		}
 		public void DrawChildren()
 		{
-			for (int i = 0; i < children.Count; i++)
+			if (scrollIndex == 0)
 			{
-				if (i == 0 && childMarked == null)
+				firstIndexSeen = true;
+			}
+			else if (scrollIndex >0)
+			{
+				firstIndexSeen = false;
+				ConsoleHelper.GameWrite("...   ");
+			}
+			for (int i = scrollIndex; i < children.Count; i++)
+			{
+				if (!scrollable || ConsoleHelper.ConsoleX + (children[i].text + "     ").Length < Border.GameConsoleWidth)
 				{
-					children[0].currentlyMarked = true;
-					childMarked = children[0];
+					if (i == 0 && childMarked == null)
+					{
+						children[0].currentlyMarked = true;
+						childMarked = children[0];
+					}
+					if (childSelected != null && children[i] == childSelected)
+					{
+						ConsoleHelper.GameWrite("-");
+					}
+					if (children[i].currentlyMarked)
+					{
+						ConsoleHelper.GameWrite("->");
+					}
+					ConsoleHelper.GameWrite(children[i].text + "   ");
 				}
-				if (childSelected != null && children[i] == childSelected)
+				else
 				{
-					ConsoleHelper.GameWrite("-");
+					ConsoleHelper.GameWrite("   ...");
+					lastDrawnIndex = i - 1;
+					lastIndexSeen = false;
+					break;
 				}
-				if (children[i].currentlyMarked)
+				lastIndexSeen = true;
+				if (scrollIndex > 0)
 				{
-					ConsoleHelper.GameWrite("->");
+					firstIndexSeen = false;
 				}
-				ConsoleHelper.GameWrite(children[i].text + "    ");
 			}
 			if (childSelected != null)
 			{
@@ -247,7 +284,7 @@ namespace RPGAsci
 				}
 			}
 		}
-		public string GetSelectedItem(int level)
+		public string GetSelectedItemText(int level)
 		{
 			if (this.level == level)
 			{
@@ -258,13 +295,45 @@ namespace RPGAsci
 			}
 			foreach (MenuItem child in children)
 			{
-				string text = child.GetSelectedItem(level);
+				string text = child.GetSelectedItemText(level);
 				if (text != "")
 				{
 					return text;
 				}
 			}
 			return "";
+		}
+		public string GetMarkedItemText()
+		{
+			if (currentlyMarked)
+			{
+				return text;
+			}
+			foreach (MenuItem child in children)
+			{
+				string text = child.GetMarkedItemText();
+				if (text != "")
+				{
+					return text;
+				}
+			}
+			return "";
+		}
+		public MenuItem GetMarkedItem()
+		{
+			if (currentlyMarked)
+			{
+				return this;
+			}
+			foreach (MenuItem child in children)
+			{
+				MenuItem item = child.GetMarkedItem();
+				if (item != null)
+				{
+					return item;
+				}
+			}
+			return null;
 		}
 		public void Reset()
 		{

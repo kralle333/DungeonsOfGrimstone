@@ -80,27 +80,28 @@ namespace RPGAsci
 						}
 					}
 				}
-				if (newTurn)
-				{
-					foreach (Monster m in monsters)
-					{
-						m.usedTurn = false;
-					}
-					foreach (Character character in party.characters)
-					{
-						character.usedTurn = false;
-					}
-					round++;
-					ConsoleHelper.ClearConsole();
-					ConsoleHelper.GameWriteLine(round + ". round started");
-					Console.ReadKey(true);
-				}
-				if (monsters.Count() == 0)
-				{
-					BattleWon();
-					return;
-				}
 			}
+			if (newTurn)
+			{
+				foreach (Monster m in monsters)
+				{
+					m.usedTurn = false;
+				}
+				foreach (Character character in party.characters)
+				{
+					character.usedTurn = false;
+				}
+				round++;
+				ConsoleHelper.ClearConsole();
+				ConsoleHelper.GameWriteLine(round + ". round started");
+				Console.ReadKey(true);
+			}
+			if (monsters.Count() == 0)
+			{
+				BattleWon();
+				return;
+			}
+
 			Border.DrawStats(party, Program.level);
 		}
 
@@ -130,6 +131,7 @@ namespace RPGAsci
 		private bool HandlePlayerTurn(Unit unit)
 		{
 			bool usedTurn = false;
+			ConsoleHelper.ClearConsole();
 			battleMenu.Reset();
 			battleMenu.currentlySelected = true;
 			if (unit.defending)
@@ -175,6 +177,8 @@ namespace RPGAsci
 			}
 			battleMenu.GetItem("Skills").children.Clear();
 			battleMenu.GetItem("Items").children.Clear();
+			battleMenu.GetItem("Skills").Reset();
+			battleMenu.GetItem("Items").Reset();
 			return false;
 		}
 
@@ -210,7 +214,7 @@ namespace RPGAsci
 				}
 				else
 				{
-					Skill currentSkill = CharacterManager.GetSkill(battleMenu.GetSelectedItem(2));
+					Skill currentSkill = CharacterManager.GetSkill(battleMenu.GetSelectedItemText(2));
 					if (currentSkill.target == "Self")
 					{
 						unit.skillsLeft[currentSkill]--;
@@ -252,7 +256,6 @@ namespace RPGAsci
 						newTurn = false;
 						targetMenu.Reset();
 						targetMenu.children.Clear();
-						Console.ReadKey(true);
 						return true;
 					}
 					else if (currentSkill.target == "Single")
@@ -283,11 +286,13 @@ namespace RPGAsci
 							{
 								if (currentSkill.offensive)
 								{
-									Monster target = monsters.Find(x => x.name == item.text);
+									Monster target = monsters[targetMenu.index];
 									ConsoleHelper.ClearConsole();
 									currentSkill.Use(unit, target);
 									Console.ReadKey(true);
 									unit.skillsLeft[currentSkill]--;
+									targetMenu.Reset();
+									targetMenu.children.Clear();
 									if (target.currentHp <= 0)
 									{
 										return MonsterKilled(target);
@@ -295,7 +300,7 @@ namespace RPGAsci
 								}
 								else
 								{
-									Character target = remainingCharacters.Find(x => x.name == item.text);
+									Character target = remainingCharacters[targetMenu.index];
 									ConsoleHelper.ClearConsole();
 									currentSkill.Use(unit, target);
 									Console.ReadKey(true);
@@ -304,7 +309,6 @@ namespace RPGAsci
 
 								targetMenu.Reset();
 								targetMenu.children.Clear();
-								Console.ReadKey(true);
 								return true;
 							}
 						}
@@ -348,7 +352,7 @@ namespace RPGAsci
 				}
 				else
 				{
-					Item currentItem = ItemManager.GetItem(battleMenu.GetSelectedItem(2));
+					Item currentItem = ItemManager.GetItem(battleMenu.GetSelectedItemText(2));
 					if (currentItem.target == "Self")
 					{
 						currentItem.Use(unit);
@@ -420,7 +424,7 @@ namespace RPGAsci
 							{
 								if (currentItem.offensive)
 								{
-									Monster target = monsters.Find(x => x.name == item.text);
+									Monster target = monsters[targetMenu.index];
 									ConsoleHelper.ClearConsole();
 									currentItem.Use(target);
 									Console.ReadKey(true);
@@ -430,13 +434,12 @@ namespace RPGAsci
 
 									if (target.currentHp <= 0)
 									{
-
 										return MonsterKilled(target);
 									}
 								}
 								else
 								{
-									Character target = remainingCharacters.Find(x => x.name == item.text);
+									Character target = remainingCharacters[targetMenu.index];
 									ConsoleHelper.ClearConsole();
 									currentItem.Use(target);
 									Console.ReadKey(true);
@@ -501,12 +504,12 @@ namespace RPGAsci
 			foreach (Character character in remainingCharacters)
 			{
 				character.experience += experience;
-				if ((character.experience / 1000) * character.level >= 1)
+				if ((character.experience / 100) * character.level >= 1)
 				{
 					ConsoleHelper.ClearConsole();
 					levelUpChoice.Reset();
 					character.level++;
-					character.experience = (character.experience % 1000);
+					character.experience = (character.experience % 100);
 					ConsoleHelper.GameWriteLine(character.name + " reached level " + character.level);
 					Console.ReadKey(true);
 					character.SetLevelChanges();
@@ -528,10 +531,11 @@ namespace RPGAsci
 		{
 			ConsoleHelper.GameWriteLine(m.name + " died!");
 			Console.ReadKey(true);
-			experience += m.power;
+			experience += m.experience;
 			monsters.Remove(m);
 			m.usedTurn = true;
 			battleMenu.RemoveChild(m.name);
+			ConsoleHelper.ClearConsole();
 			DrawBattle();
 			if (monsters.Count == 0)
 			{
@@ -545,11 +549,6 @@ namespace RPGAsci
 
 			int cursorSize = Console.CursorSize;
 			Console.SetCursorPosition(10, 10);
-			/*foreach(Monster monster in monsters)
-			{
-				
-				ConsoleHelper.PaddedWriteLine((4-(monsters.Count() /3)) *6, monster.name, ' ');
-			}*/
 			ConsoleHelper.ClearMainFrame();
 			if (monsters.Count() > 0)
 			{
@@ -557,53 +556,53 @@ namespace RPGAsci
 				int drawXAdd = ((Border.MainFrameWidth - 20) / monsters.Count()) - 5 * monsters.Count();
 				foreach (Monster monster in monsters)
 				{
-					string file;
-					if (File.Exists("Art//Monsters//" + monster.image))
+					int currentLine = 10;
+					int width = 0;
+					Console.SetCursorPosition(drawXIndex, currentLine);
+					foreach (Char c in monster.image.ToCharArray())
 					{
-						file = "Art//Monsters//" + monster.image;
-						string line;
-						int currentLine = 10;
-						int width = 0;
-						using (StreamReader reader = new StreamReader(file))
+						if (c == '0')
 						{
-							while ((line = reader.ReadLine()) != null)
-							{
-								Console.SetCursorPosition(drawXIndex, currentLine);
-								foreach (Char c in line.ToCharArray())
-								{
-									if (c == '0')
-									{
-										Console.BackgroundColor = ConsoleColor.Black;
-										Console.Write(' ');
-									}
-									else if (c == '1')
-									{
-										Console.BackgroundColor = ConsoleColor.White;
-										Console.Write(' ');
-									}
-									else if (c == '2')
-									{
-										Console.BackgroundColor = ConsoleColor.Gray;
-										Console.Write(' ');
-									}
-									else if (c == '3')
-									{
-										Console.BackgroundColor = ConsoleColor.Yellow;
-										Console.Write(' ');
-									}
-									else if (c == '4')
-									{
-										Console.BackgroundColor = ConsoleColor.Green;
-										Console.Write(' ');
-									}
-									width = line.ToCharArray().Length;
-								}
-								currentLine++;
-							}
+							Console.BackgroundColor = ConsoleColor.Black;
+							Console.Write(' ');
+							width++;
 						}
-						drawXIndex += drawXAdd + width + (15 - width);
-						Console.ResetColor();
+						else if (c == '1')
+						{
+							Console.BackgroundColor = ConsoleColor.White;
+							Console.Write(' ');
+							width++;
+						}
+						else if (c == '2')
+						{
+							Console.BackgroundColor = ConsoleColor.Gray;
+							Console.Write(' ');
+							width++;
+						}
+						else if (c == '3')
+						{
+							Console.BackgroundColor = ConsoleColor.Yellow;
+							Console.Write(' ');
+							width++;
+						}
+						else if (c == '4')
+						{
+							Console.BackgroundColor = ConsoleColor.Green;
+							Console.Write(' ');
+							width++;
+						}
+						if (width == monster.imageWidth)
+						{
+							currentLine++;
+							Console.SetCursorPosition(drawXIndex, currentLine);
+							width = 0;
+						}
+
 					}
+
+					drawXIndex += drawXAdd + monster.imageWidth + (15 - monster.imageWidth);
+					Console.ResetColor();
+
 				}
 			}
 		}

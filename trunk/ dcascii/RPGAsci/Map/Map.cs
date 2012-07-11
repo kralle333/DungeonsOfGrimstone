@@ -18,6 +18,7 @@ namespace RPGAsci
 		public List<MonsterUnit> monsters = new List<MonsterUnit>();
 		Random random = new Random();
 		MenuItem YesNoMenu;
+		MenuItem skillMenu;
 		MenuItem targetMenu = new MenuItem("Target:", 0, 0);
 
 		public Map(int width, int height)
@@ -37,6 +38,11 @@ namespace RPGAsci
 			YesNoMenu.currentlySelected = true;
 			YesNoMenu.AddChild(new MenuItem("Yes"));
 			YesNoMenu.AddChild(new MenuItem("No"));
+			skillMenu = new MenuItem("Select skill tree", 0, 0);
+			foreach (Character c in Program.party.characters)
+			{
+				skillMenu.AddChild(new MenuItem(c.name));
+			}
 		}
 		public void PlaceHero()
 		{
@@ -270,7 +276,7 @@ namespace RPGAsci
 			}
 			else if (kb.Key == ConsoleKey.I)
 			{
-				MenuItem items = new MenuItem("Items:",0,0);
+				MenuItem items = new MenuItem("Items:", 0, 0);
 				foreach (KeyValuePair<Item, int> pair in Program.party.items)
 				{
 					MenuItem item = new MenuItem(pair.Value + "x " + pair.Key.name);
@@ -281,12 +287,12 @@ namespace RPGAsci
 					items.AddChild(item);
 				}
 				items.Draw();
-				
+
 				while (true)
 				{
 					ConsoleKeyInfo input = Console.ReadKey(true);
 					items.ReadInput(input);
-					
+
 					if (items.childSelected != null)
 					{
 						break;
@@ -297,7 +303,7 @@ namespace RPGAsci
 						return;
 					}
 				}
-				Item currentItem = ItemManager.GetItem(items.GetSelectedItem(1));
+				Item currentItem = ItemManager.GetItem(items.GetSelectedItemText(1));
 				if (currentItem.target == "All")
 				{
 					foreach (Unit c in Program.party.characters)
@@ -340,7 +346,7 @@ namespace RPGAsci
 							targetMenu.children.Clear();
 							break;
 						}
-						else if(input.Key == ConsoleKey.Z)
+						else if (input.Key == ConsoleKey.Z)
 						{
 							ConsoleHelper.ClearConsole();
 							items.children.Clear();
@@ -350,6 +356,44 @@ namespace RPGAsci
 					}
 				}
 				ConsoleHelper.ClearConsole();
+			}
+			else if (kb.Key == ConsoleKey.S)
+			{
+				skillMenu.Draw();
+				while (true)
+				{
+					ConsoleKeyInfo skillInput = Console.ReadKey(true);
+					skillMenu.ReadInput(skillInput);
+					if (skillMenu.childSelected != null)
+					{
+						SkillTree currentTree;
+						currentTree = Program.party.characters[skillMenu.index].skillTree;
+						ConsoleHelper.ClearConsole();
+						currentTree.Draw();
+						while (true)
+						{
+							ConsoleKeyInfo input = Console.ReadKey(true);
+							if (currentTree.HandleInput(input))
+							{
+								ConsoleHelper.ClearConsole();
+								currentTree.Draw();
+							}
+							if (currentTree.treeItem.childSelected == null && input.Key == ConsoleKey.Z)
+							{
+								ConsoleHelper.ClearConsole();
+								currentTree.treeItem.Reset();
+								skillMenu.Reset();
+								skillMenu.Draw();
+								break;
+							}
+						}
+					}
+					if (skillMenu.childSelected == null && skillInput.Key == ConsoleKey.Z)
+					{
+						ConsoleHelper.ClearConsole();
+						break;
+					}
+				}
 			}
 
 			if (tiles[heroX, heroY].monster != null)
