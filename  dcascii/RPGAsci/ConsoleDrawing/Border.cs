@@ -39,7 +39,12 @@ namespace RPGAsci
 			Console.SetCursorPosition(0,0);
 			Console.ResetColor();
 		}
-
+		static public void UpdateDungeonLevel(int level)
+		{
+			Console.BackgroundColor = ConsoleColor.DarkGray;
+			Console.SetCursorPosition(81, 2);
+			ConsoleHelper.PaddedWriteLine(18, "Dungeon Level: " + level, ' ');
+		}
 		static public void DrawStats(Party party, int level)
 		{
 			Console.BackgroundColor = ConsoleColor.DarkGray;
@@ -51,13 +56,15 @@ namespace RPGAsci
 			ConsoleHelper.WriteBlanks(18);
 			for (int i = 0; i < party.characters.Count(); i++)
 			{
+				
 				for (int j = 1; j < 15; j++)
 				{
 					Console.SetCursorPosition(81, j + 15 * i + 4);
 					switch (j)
 					{
-						case 1: ConsoleHelper.PaddedWriteLine(18, party.characters[i].name + " the " + party.characters[i].ToString(), ' '); break;
-						case 2: ConsoleHelper.PaddedWriteLine(18, "Level: " + party.characters[i].level, ' '); break;
+						case 1: ConsoleHelper.PaddedWriteLine(18, party.characters[i].name+ " the", ' '); break;
+						case 2: ConsoleHelper.PaddedWriteLine(18, party.characters[i].classType, ' '); break;
+						case 3: ConsoleHelper.PaddedWriteLine(18, "Level: " + party.characters[i].level, ' '); break;
 						case 5: if (party.characters[i].currentHp > 0) { ConsoleHelper.PaddedWriteLine(18, party.characters[i].image, ' '); } else { ConsoleHelper.PaddedWriteLine(18, "X_x", ' '); } break;
 						case 10: ConsoleHelper.PaddedWriteLine(18, "Hp: " + party.characters[i].currentHp+"/"+party.characters[i].hp, ' '); break;
 						case 11: ConsoleHelper.PaddedWriteLine(18, "Attack: " + party.characters[i].attack, ' '); break;

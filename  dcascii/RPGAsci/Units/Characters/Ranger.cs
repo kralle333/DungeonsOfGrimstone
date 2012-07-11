@@ -9,7 +9,9 @@ namespace RPGAsci
 	{
 		public Ranger(string image, string name):base(13, 5, 4, image, name, 10, 5)
 		{
-			growthRate = new LevelUpGrowthRate(0.1f, 0.15f, 0.4f, 0.2f, 0.4f);
+			classType = "Ranger";
+			growthRate = new CharacterGrowthRate(0.1f, 0.15f, 0.4f, 0.2f, 0.4f);
+			skillTree.FinalizeTree(this);
 		}
 	}
 }

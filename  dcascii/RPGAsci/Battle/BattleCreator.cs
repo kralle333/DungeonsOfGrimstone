@@ -15,13 +15,13 @@ namespace RPGAsci
 		public Battle CreateBattle(Party party,int level)
 		{
 			List<Monster> monsters = new List<Monster>();
-			int partyPower = party.GetPowerLevel();
 			int monsterPackPower = 0;
 			Monster currentMonster;
+			int numberOfMonster = random.Next(1, 4);
 			indexes.Clear();
-			while (3000*level-monsterPackPower > 0 && monsters.Count()<3)
+			while (numberOfMonster > 0 && monsters.Count()<3)
 			{
-				currentMonster = mc.GetMonster(level,partyPower);
+				currentMonster = mc.GetMonster(level);
 				if (!indexes.ContainsKey(currentMonster.name))
 				{
 					indexes[currentMonster.name] = 0;
@@ -38,6 +38,7 @@ namespace RPGAsci
 				}
 				monsters.Add(currentMonster);
 				monsterPackPower += currentMonster.GetPower();
+				numberOfMonster--;
 			}
 			foreach (Monster c in changeNames)
 			{

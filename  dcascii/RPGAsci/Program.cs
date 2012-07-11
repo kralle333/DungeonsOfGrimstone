@@ -13,7 +13,6 @@ namespace RPGAsci
 		static public int level = 1;
 		static private Random random = new Random();
 		static private MapCreator mc = new MapCreator();
-		static private HeroStats hs = new HeroStats();
 		static private BattleCreator bc = new BattleCreator();
 		static private Map currentMap;
 		static void Main(string[] args)
@@ -66,6 +65,7 @@ namespace RPGAsci
 				if (currentMap.stairwayFound)
 				{
 					level++;
+					Border.UpdateDungeonLevel(level);
 					ConsoleHelper.ClearConsole();
 					ConsoleHelper.ClearMainFrame();
 					currentMap = mc.CreateMap(Clamp(12,Border.MainFrameWidth,random.Next(12, 12 * (level+1))), Clamp(12,Border.MainFrameHeight,random.Next(12, 12 * (level+1))), level);
@@ -119,7 +119,7 @@ namespace RPGAsci
 				while (true)
 				{
 					portraitSelection.ReadInput(Console.ReadKey(true));
-					image = portraitSelection.GetSelectedItem(1);
+					image = portraitSelection.GetSelectedItemText(1);
 					if (image.StartsWith("Draw"))
 					{
 						image = ConsoleHelper.SimpleRead("Draw/type the appearance", 4);
@@ -135,7 +135,7 @@ namespace RPGAsci
 				while (true)
 				{
 					classSelectionMenu.ReadInput(Console.ReadKey(true));
-					string classType = classSelectionMenu.GetSelectedItem(1);
+					string classType = classSelectionMenu.GetSelectedItemText(1);
 					if (classType != "")
 					{
 						switch (classType)
@@ -148,6 +148,7 @@ namespace RPGAsci
 							case "Nurse": party.characters.Add(new Nurse(image, name)); break;
 							case "BlackSmith": party.characters.Add(new BlackSmith(image, name)); break;
 						}
+						break;
 					}
 				}
 			}
