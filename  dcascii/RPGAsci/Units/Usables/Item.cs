@@ -13,8 +13,9 @@ namespace RPGAsci
 		public bool offensive;
 		public int xPos;
 		public int yPos;
+		public int price = 0;
 
-		public Item(string name, Effect effect, string target, bool offensive, int xPos, int yPos)
+		public Item(string name, Effect effect, string target, bool offensive, int xPos, int yPos,int price)
 		{
 			this.name = name;
 			this.effect = effect;
@@ -22,6 +23,7 @@ namespace RPGAsci
 			this.offensive = offensive;
 			this.xPos = xPos;
 			this.yPos = yPos;
+			this.price = price;
 		}
 		public Item()
 		{

@@ -13,10 +13,10 @@ namespace RPGAsci
 
 		static public void Init()
 		{
-			items.Add("Herb", new Item("Herb", new Effect(10, false), "Single", false, 0, 0));
-			items.Add("Potion", new Item("Potion", new Effect(30, false), "Single", false, 0, 0));
-			items.Add("Bell", new Item("Bell", new Effect(0, 0, 0, 0, 0, 0, StatusEffect.CureSleep, false, 0),"Single",false,0,0));
-			items.Add("FluffySheep", new Item("FluffySheep", new Effect(0, StatusEffect.Sleep), "Single", true, 0, 0));
+			items.Add("Herb", new Item("Herb", new Effect(10, false), "Single", false, 0, 0,10));
+			items.Add("Potion", new Item("Potion", new Effect(30, false), "Single", false, 0, 0,30));
+			items.Add("Bell", new Item("Bell", new Effect(0, 0, 0, 0, 0, 0, StatusEffect.CureSleep, false, 0),"Single",false,0,0,25));
+			items.Add("FluffySheep", new Item("FluffySheep", new Effect(0, StatusEffect.Sleep), "Single", true, 0, 0,33));
 		}
 		static public Item GetItem(string name)
 		{
