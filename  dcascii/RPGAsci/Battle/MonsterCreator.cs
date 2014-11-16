@@ -45,7 +45,7 @@ namespace RPGAsci
 				monsterFile = "Data/Level5.txt";
 			}
 			string[] monsterInfo = File.ReadAllLines(monsterFile);
-			int currentMonster = random.Next(0, level + 1) * (level / 10 + 1) * 7;
+			int currentMonster = random.Next(0,  Math.Min(3,level + 1)) * (level / 10 + 1) * 7;
 			string monsterName = monsterInfo[currentMonster];
 			string image = "";
 			string file;
@@ -70,10 +70,12 @@ namespace RPGAsci
 		{
 			monsterTypes.Add(new MonsterTemplate("bat.txt", "Bat", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
 			monsterTypes.Add(new MonsterTemplate("slime.txt", "Slime", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
+			monsterTypes.Add(new MonsterTemplate("Zombie.txt", "Zombie", ConsoleColor.DarkGreen, 1, 1, 1, 1, 1));
 			//monsterTypes.Add(new MonsterTemplate(">*_*<", "Butterfly", ConsoleColor.Blue, 1,1, 1, 2,1));
 			//monsterTypes.Add(new MonsterTemplate("^(0v0)^", "Owl", ConsoleColor.Gray, 2,2, 1, 2,1));
 			//monsterTypes.Add(new MonsterTemplate(".,.^_^.,.", "Cat", ConsoleColor.Gray,1,3, 1, 2,1));
 		}
+	
 	}
 
 }

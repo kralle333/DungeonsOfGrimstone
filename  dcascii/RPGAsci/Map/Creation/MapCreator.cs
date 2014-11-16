@@ -26,11 +26,109 @@ namespace RPGAsci
 		int sleepyTime = 100;
 		int level = 0;
 		char connections = 'A';
+
+		private int minRoomSize = 5;
+		private int maxRoomSize = 10;
+
+
 		public MapCreator()
 		{
 
 		}
-		public Map CreateMap(int width, int height, int level)
+		public Map CreateMapUsingBSP(int width, int height, int level)
+		{
+			map = new Map(width, height);
+			this.level = level;
+			DivideAndConnect(0, 0, width, height);
+			if (debug)
+			{
+				ConsoleHelper.GameClearLine();
+				ConsoleHelper.GameWriteLine("Setting Corridors");
+			}
+
+			while (true)
+			{
+				int randX = random.Next(1, map.width);
+				int randY = random.Next(1, map.height);
+				if (map.tiles[randX, randY].IsWalkable())
+				{
+					map.tiles[randX, randY].type = Tile.TileType.Stairway;
+					break;
+				}
+			}
+			PlaceMonsters();
+			PlaceItems();
+			if (debug)
+			{
+				ConsoleHelper.ClearConsole();
+			}
+
+			return map;
+		}
+		private Room DivideAndConnect(int x, int y, int width, int height)
+		{
+			int split = 0;
+
+			int minSplitX = x + minRoomSize;
+			int maxSplitX = x + width - maxRoomSize;
+			int minSplitY = y + minRoomSize;
+			int maxSplitY = y + height - maxRoomSize;
+			bool doVerticalSplit = false;
+
+			if (random.Next(100)<1  || (minSplitX >= maxSplitX && minSplitY >= maxSplitY))
+			{
+				Room newRoom = new Room(width-1, height-1, x, y);
+				map.AddRoom(newRoom);
+				if (debug)
+				{
+					for (int xx = newRoom.xPos; xx < newRoom.width + newRoom.xPos; xx++)
+					{
+						for (int yy = newRoom.yPos; yy < newRoom.height + newRoom.yPos; yy++)
+						{
+							map.tiles[xx, yy].Draw();
+							Thread.Sleep(5);
+						}
+					}
+				}
+				return newRoom;
+			}
+			else
+			{
+				if (minSplitX >= maxSplitX)
+				{
+					doVerticalSplit = false;
+				}
+				else if (minSplitY >= maxSplitY)
+				{
+					doVerticalSplit = true;
+				}
+				else
+				{
+					doVerticalSplit = random.Next(2) == 1;
+				}
+				Room leftRoom = null;
+				Room rightRoom = null;
+				if (doVerticalSplit)
+				{
+					split = random.Next(x + minRoomSize, x + width - maxRoomSize);
+					leftRoom = DivideAndConnect(x, y, split - x, height);
+					rightRoom = DivideAndConnect(split + 1, y, width - (split - x) - 1, height);
+
+				}
+				else
+				{
+					split = random.Next(y + minRoomSize, y + height - maxRoomSize);
+					leftRoom = DivideAndConnect(x, y, width, split - y);
+					rightRoom = DivideAndConnect(x, split + 1, width, height - (split - y) - 1);
+				}
+				PlaceDoor(leftRoom);
+				PlaceDoor(rightRoom);
+				ConnectTwoRooms(leftRoom, rightRoom);
+				return leftRoom;
+			}
+		}
+
+		public Map CreateMapUsingRandomWalk(int width, int height, int level)
 		{
 			map = new Map(width, height);
 			this.level = level;
@@ -39,7 +137,7 @@ namespace RPGAsci
 
 			while (numberOfRooms > 0)
 			{
-				if (PlaceRoom())
+				if (PlaceRoomRandomly())
 				{
 					numberOfRooms--;
 					if (debug)
@@ -75,9 +173,9 @@ namespace RPGAsci
 			{
 				int randX = random.Next(1, map.width);
 				int randY = random.Next(1, map.height);
-				if (map.tiles[randX, randY].type == "Walkable")
+				if (map.tiles[randX, randY].IsWalkable())
 				{
-					map.tiles[randX, randY].type = "Stairway";
+					map.tiles[randX, randY].type = Tile.TileType.Stairway;
 					break;
 				}
 			}
@@ -89,7 +187,8 @@ namespace RPGAsci
 			}
 			return map;
 		}
-		private bool PlaceRoom()
+		
+		private bool PlaceRoomRandomly()
 		{
 			Room room = new Room(random.Next(3, map.width / (map.width / 10)), random.Next(3, map.width / (map.width / 10)), random.Next(map.width - 1), random.Next(map.height - 1));
 			if (room.xPos + room.width >= map.width || room.yPos + room.height >= map.height || room.xPos <0 || room.yPos <0)
@@ -114,7 +213,7 @@ namespace RPGAsci
 				{
 					for (int y = room.yPos; y < room.height + room.yPos; y++)
 					{
-						map.DrawTile(x, y);
+						map.tiles[x, y].Draw();
 						if (debug)
 						{
 							Thread.Sleep(5);
@@ -201,7 +300,7 @@ namespace RPGAsci
 			Door door = new Door(randX, randY);
 			room.AddDoor(door);
 			map.tiles[randX, randY] = door;
-			map.DrawTile(randX, randY);
+			map.tiles[randX, randY].Draw();
 			if (debug)
 			{
 				Thread.Sleep(1);
@@ -267,14 +366,14 @@ namespace RPGAsci
 						currentPositionY--;
 						direction = "Up";
 					}
-					if (map.tiles[currentPositionX, currentPositionY].type == "UnWalkable")
+					if (map.tiles[currentPositionX, currentPositionY].IsWalkable())
 					{
-						map.tiles[currentPositionX, currentPositionY].type = "Walkable";
+						map.tiles[currentPositionX, currentPositionY].type = Tile.TileType.Dirt;
 						map.tiles[currentPositionX, currentPositionY].corridor = doorsToSet[i].doorCorridor;
 						if (debug)
 						{
 							map.tiles[currentPositionX, currentPositionY].light = 3;
-							map.DrawTile(currentPositionX, currentPositionY);
+							map.tiles[currentPositionX, currentPositionY].Draw();
 						}
 					}
 
@@ -385,13 +484,13 @@ namespace RPGAsci
 						}
 						if (drewTile)
 						{
-							map.tiles[currentPositionX, currentPositionY].type = "Walkable";
+							map.tiles[currentPositionX, currentPositionY].type = Tile.TileType.Dirt;
 							map.tiles[currentPositionX, currentPositionY].corridor = doorsToSet[i].doorCorridor;
 							if (debug)
 							{
 								Console.BackgroundColor = debugColors[debugColorIndex];
 								map.tiles[currentPositionX, currentPositionY].light = 3;
-								map.DrawTile(currentPositionX, currentPositionY);
+								map.tiles[currentPositionX, currentPositionY].Draw();
 								Thread.Sleep(sleepyTime);
 							}
 							List<Tile> adjTiles = TileHelper.GetAdjacentTiles(currentPositionX, currentPositionY, map);
@@ -574,10 +673,6 @@ namespace RPGAsci
 					}
 				}
 			}
-			if (closest > map.width / 5)
-			{
-				return false;
-			}
 			#endregion
 
 			#region trying to connect the rooms
@@ -639,7 +734,7 @@ namespace RPGAsci
 				}
 				currentX = bestTile.x;
 				currentY = bestTile.y;
-				bestTile.type = "Walkable";
+				bestTile.type = Tile.TileType.Dirt;
 				tilesMade.Add(bestTile);
 				if (lastTile != null && lastTile == bestTile)
 				{
@@ -652,7 +747,7 @@ namespace RPGAsci
 					
 					map.tiles[currentX, currentY].light = 2;
 					Console.BackgroundColor = ConsoleColor.Red;
-					map.DrawTile(currentX, currentY);
+					map.tiles[currentX, currentY].Draw();
 					Console.SetCursorPosition(currentX + 1, currentY + 1);
 					Console.Write(connections);
 					Thread.Sleep(sleepyTime * 10);
@@ -696,8 +791,8 @@ namespace RPGAsci
 			List<Corridor> corridors = new List<Corridor>();
 			for (int i = 0; i < adjTiles.Count; i++)
 			{
-				if ((adjTiles[i].type == "Walkable" && adjTiles[i].corridor.tiles.Count() > 0 && adjTiles[i].corridor != map.tiles[x, y].corridor) ||
-					adjTiles[i].type == "Door" && map.tiles[x, y].corridor.startDoor != adjTiles[i])
+				if ((adjTiles[i].IsWalkable() && adjTiles[i].corridor.tiles.Count() > 0 && adjTiles[i].corridor != map.tiles[x, y].corridor) ||
+					adjTiles[i].type == Tile.TileType.Door && map.tiles[x, y].corridor.startDoor != adjTiles[i])
 				{
 
 					corridors.Add(adjTiles[i].corridor);
@@ -725,8 +820,7 @@ namespace RPGAsci
 			{
 				return false;
 			}
-			else if (map.tiles[x, y].type == "Walkable" ||
-					map.tiles[x, y].type == "Door" || map.tiles[x, y].type == "Wall")
+			else if (map.tiles[x,y].IsWalkable())
 			{
 				return false;
 			}
@@ -734,7 +828,7 @@ namespace RPGAsci
 			int adjCorridors = 0;
 			for (int i = 0; i < adjTiles.Count; i++)
 			{
-				if (adjTiles[i].type == "Walkable")
+				if (map.tiles[x, y].IsWalkable())
 				{
 					adjCorridors++;
 				}
@@ -750,8 +844,8 @@ namespace RPGAsci
 			int numberOfMonsters = (int)Math.Sqrt(map.width * map.height) / 4;
 			while (numberOfMonsters > 0)
 			{
-				Tile tile = TileHelper.GetRandomTileOfType(map, "Walkable");
-				tile.monster = new MonsterUnit(tile.x,tile.y);
+				Tile tile = TileHelper.GetRandomTileOfType(map, Tile.TileType.Dirt);
+				tile.monster = new MonsterUnit(tile,map);
 				map.monsters.Add(tile.monster);
 				numberOfMonsters--;
 			}
@@ -761,7 +855,7 @@ namespace RPGAsci
 			int numberOfItems = (int)Math.Sqrt(map.width * map.height) / 12;
 			while (numberOfItems > 0)
 			{
-				Tile tile = TileHelper.GetRandomTileOfType(map, "Walkable");
+				Tile tile = TileHelper.GetRandomTileOfType(map,Tile.TileType.Dirt);
 				if (tile.monster == null)
 				{
 					tile.item = ItemManager.GetRandomItem(level);
@@ -807,11 +901,11 @@ namespace RPGAsci
 					{
 						if (y == startY || y == 4)
 						{
-							tiles[x, y].type = "Wall";
+							tiles[x, y].type = Tile.TileType.Wall;
 						}
 						else
 						{
-							tiles[x, y].type = "Walkable";
+							tiles[x, y].type = Tile.TileType.Dirt;
 						}
 					}
 				}

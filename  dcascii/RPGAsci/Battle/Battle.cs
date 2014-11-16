@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using RPGAsci.ConsoleDrawing;
 
 namespace RPGAsci
 {
@@ -54,7 +55,6 @@ namespace RPGAsci
 			{
 				a.AddChild(new MenuItem(monster.name));
 			}
-			battleMenu.currentlySelected = true;
 		}
 		public void UpdateTurns()
 		{
@@ -67,7 +67,7 @@ namespace RPGAsci
 					if (unit is Monster)
 					{
 						HandleMonsterTurn(unit);
-						if (remainingCharacters.Count() == 0)
+						if (!remainingCharacters.Any())
 						{
 							return;
 						}
@@ -91,12 +91,13 @@ namespace RPGAsci
 				{
 					character.usedTurn = false;
 				}
+				remainingUnits.OrderBy(u => u.currentSpeed);
 				round++;
 				ConsoleHelper.ClearConsole();
 				ConsoleHelper.GameWriteLine(round + ". round started");
 				Console.ReadKey(true);
 			}
-			if (monsters.Count() == 0)
+			if (!monsters.Any())
 			{
 				BattleWon();
 				return;
@@ -133,7 +134,6 @@ namespace RPGAsci
 			bool usedTurn = false;
 			ConsoleHelper.ClearConsole();
 			battleMenu.Reset();
-			battleMenu.currentlySelected = true;
 			if (unit.defending)
 			{
 				unit.defending = false;
@@ -151,11 +151,11 @@ namespace RPGAsci
 				{
 					usedTurn = HandleDefend(unit);
 				}
-				else if (unit.skillsLeft.Count() > 0 && battleMenu.IsSelected("Skills"))
+				else if (unit.skillsLeft.Any()&& battleMenu.IsSelected("Skills"))
 				{
 					usedTurn = HandleSkillsUse(unit);
 				}
-				else if (party.items.Count() > 0 && battleMenu.IsSelected("Items"))
+				else if (party.items.Any()  && battleMenu.IsSelected("Items"))
 				{
 					usedTurn = HandleItemUse(unit);
 				}
@@ -184,20 +184,24 @@ namespace RPGAsci
 
 		private bool HandleAttack(Unit unit)
 		{
-			int monsterIndex = battleMenu.IsChildrenPressed("Attack");
+			int monsterIndex = battleMenu.GetIndexOfSelectedChild("Attack");
 			if (monsterIndex == -1)
 			{
 				return false;
 			}
-			ConsoleHelper.GameWriteLine();
 			Monster monster = monsters[monsterIndex];
+			ConsoleHelper.ClearConsole();
 			ConsoleHelper.GameWrite(unit.name + " attacked " + monster.name);
 			unit.Attack(monster);
-			Console.ReadKey(true);
 			if (monster.currentHp <= 0)
 			{
 				MonsterKilled(monster);
 			}
+			else
+			{
+				DrawMonsterHp();
+			}
+			Console.ReadKey(true);
 			ConsoleHelper.GameWriteLine();
 			newTurn = false;
 			return true;
@@ -207,7 +211,7 @@ namespace RPGAsci
 			MenuItem skills = battleMenu.GetItem("Skills");
 			if (skills.children.Count() > 0)
 			{
-				int skillIndex = battleMenu.IsChildrenPressed("Skills");
+				int skillIndex = battleMenu.GetIndexOfSelectedChild("Skills");
 				if (skillIndex == -1)
 				{
 					return false;
@@ -242,6 +246,7 @@ namespace RPGAsci
 									}
 								}
 							}
+							DrawMonsterHp();
 						}
 						else
 						{
@@ -268,6 +273,7 @@ namespace RPGAsci
 							{
 								targetMenu.AddChild(new MenuItem(m.name));
 							}
+							DrawMonsterHp();
 						}
 						else
 						{
@@ -277,7 +283,6 @@ namespace RPGAsci
 							}
 						}
 						targetMenu.Draw();
-						targetMenu.currentlySelected = true;
 						while (true)
 						{
 							targetMenu.ReadInput(Console.ReadKey(true));
@@ -293,6 +298,7 @@ namespace RPGAsci
 									unit.skillsLeft[currentSkill]--;
 									targetMenu.Reset();
 									targetMenu.children.Clear();
+									DrawMonsterHp();
 									if (target.currentHp <= 0)
 									{
 										return MonsterKilled(target);
@@ -345,7 +351,7 @@ namespace RPGAsci
 			MenuItem items = battleMenu.GetItem("Items");
 			if (items.children.Count() > 0)
 			{
-				int itemIndex = battleMenu.IsChildrenPressed("Items");
+				int itemIndex = battleMenu.GetIndexOfSelectedChild("Items");
 				if (itemIndex == -1)
 				{
 					return false;
@@ -415,7 +421,6 @@ namespace RPGAsci
 							}
 						}
 						targetMenu.Draw();
-						targetMenu.currentlySelected = true;
 						while (true)
 						{
 							targetMenu.ReadInput(Console.ReadKey(true));
@@ -544,12 +549,36 @@ namespace RPGAsci
 			}
 			return false;
 		}
+
+		private void DrawMonsterHp()
+		{
+			if (monsters.Count > 0)
+			{
+				int drawXIndex = 10;
+				int drawXAdd = ((Border.MainFrameWidth - 20) / monsters.Count()) - 5 * monsters.Count();
+				foreach (Monster monster in monsters)
+				{
+					int currentLine = 10;
+
+					//Health:
+					Console.SetCursorPosition(drawXIndex, currentLine - 2);
+					int healthLeft = (int)Math.Round((monster.currentHp / (float)monster.hp) * (float)monster.imageWidth);
+					Console.BackgroundColor = ConsoleColor.Green;
+					Console.Write(new string(' ', healthLeft));
+					Console.BackgroundColor = ConsoleColor.Red;
+					Console.Write(new string(' ', monster.imageWidth - healthLeft));
+					drawXIndex += drawXAdd + monster.imageWidth + (15 - monster.imageWidth);
+				}
+				Console.ResetColor();
+			}
+		}
 		public void DrawBattle()
 		{
 
 			int cursorSize = Console.CursorSize;
 			Console.SetCursorPosition(10, 10);
 			ConsoleHelper.ClearMainFrame();
+			DrawMonsterHp();
 			if (monsters.Count() > 0)
 			{
 				int drawXIndex = 10;
@@ -558,46 +587,22 @@ namespace RPGAsci
 				{
 					int currentLine = 10;
 					int width = 0;
+
 					Console.SetCursorPosition(drawXIndex, currentLine);
 					foreach (Char c in monster.image.ToCharArray())
 					{
-						if (c == '0')
+						if (c != '\n')
 						{
-							Console.BackgroundColor = ConsoleColor.Black;
+							Console.BackgroundColor = AsciiArtConverter.colorList[(int)Char.GetNumericValue(c)];
 							Console.Write(' ');
 							width++;
 						}
-						else if (c == '1')
-						{
-							Console.BackgroundColor = ConsoleColor.White;
-							Console.Write(' ');
-							width++;
-						}
-						else if (c == '2')
-						{
-							Console.BackgroundColor = ConsoleColor.Gray;
-							Console.Write(' ');
-							width++;
-						}
-						else if (c == '3')
-						{
-							Console.BackgroundColor = ConsoleColor.Yellow;
-							Console.Write(' ');
-							width++;
-						}
-						else if (c == '4')
-						{
-							Console.BackgroundColor = ConsoleColor.Green;
-							Console.Write(' ');
-							width++;
-						}
-						if (width == monster.imageWidth)
+						else
 						{
 							currentLine++;
 							Console.SetCursorPosition(drawXIndex, currentLine);
 							width = 0;
 						}
-
 					}
 
 					drawXIndex += drawXAdd + monster.imageWidth + (15 - monster.imageWidth);

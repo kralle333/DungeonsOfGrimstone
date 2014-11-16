@@ -12,7 +12,7 @@ namespace RPGAsci
 
 		public Door(int xPos, int yPos):base(xPos,yPos)
 		{
-			type = "Door";
+			type = TileType.Door;
 		}
 	}
 }

@@ -25,5 +25,17 @@ namespace RPGAsci
 			}
 			return power;
 		}
+
+		public void GetItem(Item item)
+		{
+			if (Program.party.items.ContainsKey(item))
+			{
+				Program.party.items[item]++;
+			}
+			else
+			{
+				Program.party.items.Add(item, 1);
+			}
+		}
 	}
 }

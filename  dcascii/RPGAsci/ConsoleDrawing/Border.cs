@@ -15,11 +15,12 @@ namespace RPGAsci
 		{
 			Console.SetCursorPosition(0, 0);
 			Console.BackgroundColor = color;
+
 			for (int y = 0; y < Console.BufferHeight; y++)
 			{
-				for (int x = 0; x <Console.BufferWidth; x++)
+				for (int x = 0; x < Console.BufferWidth; x++)
 				{
-					if (x == Console.BufferWidth - 1 && y == Console.BufferHeight - 1)
+					if (x == Console.BufferWidth-1 && y == Console.BufferHeight - 1)
 					{
 						break;
 					}
@@ -28,7 +29,7 @@ namespace RPGAsci
 						Console.SetCursorPosition(x, y);
 						Console.Write(' ');
 					}
-					if (x == Console.BufferWidth - 20 || ((y + 11) % 15 == 0 && x > Console.BufferWidth - 20 && y != 49) || y == 40 && x < 80)
+					else if (x == Console.BufferWidth - 20 || ((y + 11) % 15 == 0 && x > Console.BufferWidth - 20 && y != 49) || y == 40 && x < 80)
 					{
 						Console.SetCursorPosition(x, y);
 						Console.Write(' ');

@@ -48,6 +48,7 @@
     <Compile Include="Battle\Battle.cs" />
     <Compile Include="Battle\BattleCreator.cs" />
     <Compile Include="Battle\MonsterCreator.cs" />
+    <Compile Include="ConsoleDrawing\AsciiArtConverter.cs" />
     <Compile Include="Music\MusicForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -62,6 +63,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Art\Monsters\Bat.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Art\Monsters\Zombie.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Art\Monsters\ZombieAscii.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Art\Monsters\Slime.txt">

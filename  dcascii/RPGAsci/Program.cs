@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.IO;
+using RPGAsci.ConsoleDrawing;
 
 namespace RPGAsci
 {
@@ -17,8 +18,7 @@ namespace RPGAsci
 		static private Map currentMap;
 		static void Main(string[] args)
 		{
-			int level = 1;
-			
+			level = 1;
 			Console.SetBufferSize(100, 50);
 			Console.SetWindowSize(100, 50);
 			Console.CursorVisible = false;
@@ -28,7 +28,7 @@ namespace RPGAsci
 			ItemManager.Init();
 			
 			CreateParty();
-			currentMap = mc.CreateMap(random.Next(12, 12 * (level + 1)), random.Next(12, 12 * (level + 1)), level);
+			currentMap = mc.CreateMapUsingBSP(random.Next(15, 15 * (level + 1)), random.Next(15, 15 * (level + 1)), level);
 			currentMap.PlaceHero();
 			Border.DrawStats(party, level);
 			
@@ -68,7 +68,7 @@ namespace RPGAsci
 					Border.UpdateDungeonLevel(level);
 					ConsoleHelper.ClearConsole();
 					ConsoleHelper.ClearMainFrame();
-					currentMap = mc.CreateMap(Clamp(12,Border.MainFrameWidth,random.Next(12, 12 * (level+1))), Clamp(12,Border.MainFrameHeight,random.Next(12, 12 * (level+1))), level);
+					currentMap = mc.CreateMapUsingBSP(Clamp(12,Border.MainFrameWidth,random.Next(12, 12 * (level+1))), Clamp(12,Border.MainFrameHeight,random.Next(12, 12 * (level+1))), level);
 					currentMap.PlaceHero();
 					currentMap.Draw();
 				}
@@ -100,7 +100,7 @@ namespace RPGAsci
 			DrawLogo();
 			
 			ConsoleHelper.GameWriteLine("Welcome To Dungeon Master Bro");
-			ConsoleHelper.GameWriteLine("Create your party to start the game!\n");
+			ConsoleHelper.GameWriteLine("Create your party to start the game!\n");	
 			Console.ReadKey(true);
 			ConsoleHelper.ClearConsole();
 			party.name = ConsoleHelper.GameSimpleRead("Name of Party", 10, ConsoleColor.DarkBlue);
@@ -146,7 +146,8 @@ namespace RPGAsci
 							case "Thief": party.characters.Add(new Thief(image, name)); break;
 							case "Octonoid": party.characters.Add(new Octonoid(image, name)); break;
 							case "Nurse": party.characters.Add(new Nurse(image, name)); break;
-							case "BlackSmith": party.characters.Add(new BlackSmith(image, name)); break;
+							case "Blacksmith": party.characters.Add(new BlackSmith(image, name)); break;
+							default: Console.WriteLine("Class Not Found!!!"); break;
 						}
 						break;
 					}
@@ -157,16 +158,14 @@ namespace RPGAsci
 		}
 		static void DrawLogo()
 		{
-			string line;
 			int currentLine =5;
-			using (StreamReader reader = new StreamReader("IntroLogo.txt"))
+			string[] logoLines = System.IO.File.ReadAllLines("IntroLogo.txt");
+			
+			foreach(string line in logoLines)
 			{
-				while ((line = reader.ReadLine()) != null)
-				{
-					Console.SetCursorPosition(18,currentLine);
-					Console.WriteLine(line);
-					currentLine++;
-				}
+				Console.SetCursorPosition(18,currentLine);
+				Console.WriteLine(line);
+				currentLine++;
 			}
 		}
 		static int Clamp(int smallest, int highest, int value)

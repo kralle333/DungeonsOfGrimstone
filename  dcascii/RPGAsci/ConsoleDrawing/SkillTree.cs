@@ -11,6 +11,7 @@ namespace RPGAsci
 		public Dictionary<int, List<SkillNode>> skills = new Dictionary<int, List<SkillNode>>();
 		private List<SkillNode> drawnChildren = new List<SkillNode>();
 		public MenuItem treeItem = new MenuItem("Skill tree", 0, 0);
+		public bool isHidden = false;
 
 		public void AddNode(Skill skill, string description)
 		{
@@ -40,7 +41,7 @@ namespace RPGAsci
 				for (int i = 0; i < skills[level].Count(); i++)
 				{
 					SkillNode node = skills[level][i];
-					foreach(KeyValuePair<Skill,int> pair in node.requiredSkills)
+					foreach (KeyValuePair<Skill, int> pair in node.requiredSkills)
 					{
 						node.description = "Needed :";
 						if (pair.Value > 0)
@@ -50,7 +51,7 @@ namespace RPGAsci
 					}
 					goLevelDownItem.AddChild(node);
 				}
-				if(skills.ContainsKey(level+1))
+				if (skills.ContainsKey(level + 1))
 				{
 					goLevelDownItem.AddChild(new MenuItem("Go Level Down"));
 					goLevelDownItem = goLevelDownItem.children[goLevelDownItem.children.Count() - 1];
@@ -62,7 +63,7 @@ namespace RPGAsci
 		}
 		public void AddChild(string[] parentsName, int[] requiredNumber, Skill skill, string description, int treeLevel)
 		{
-			SkillNode skillNode = new SkillNode(skill,description);
+			SkillNode skillNode = new SkillNode(skill, description);
 			if (!skills.ContainsKey(treeLevel))
 			{
 				skills[treeLevel] = new List<SkillNode>();
@@ -83,37 +84,51 @@ namespace RPGAsci
 		public bool HandleInput(ConsoleKeyInfo input)
 		{
 			bool skillPointUsed = false;
-			if (input.Key == ConsoleKey.X && character.skillPoints > 0)
+			if (input.Key == ConsoleKey.X)
 			{
 				MenuItem markedItem = treeItem.GetMarkedItem();
-				if (markedItem.text != "Go Level Down")
+				if (markedItem.text == "Go Level Down")
 				{
-					if (((SkillNode)markedItem).available)
+					treeItem.ReadInput(input);
+				}
+				else
+				{
+					if (character.skillPoints > 0)
 					{
-						SkillNode skillItem = (SkillNode)markedItem;
-						skillItem.level++;
-						skillItem.text = skillItem.skill.name + " " + skillItem.level;
-						character.skillPoints--;
-						skillPointUsed = true;
-						character.LevelUpSkill(skillItem.skill);
+						if (((SkillNode)markedItem).available)
+						{
+							SkillNode skillItem = (SkillNode)markedItem;
+							skillItem.level++;
+							skillItem.text = skillItem.skill.name + " " + skillItem.level;
+							character.skillPoints--;
+							skillPointUsed = true;
+							character.LevelUpSkill(skillItem.skill);
+						}
+						else
+						{
+							ConsoleHelper.ClearConsole();
+							ConsoleHelper.GameWrite("Skill is locked! " + ((SkillNode)markedItem).description);
+							Console.ReadKey(true);
+							skillPointUsed = true;
+						}
 					}
 					else
 					{
 						ConsoleHelper.ClearConsole();
-						ConsoleHelper.GameWrite("Skill is locked! " + ((SkillNode)markedItem).description);
+						ConsoleHelper.GameWrite("Not enough skill points left!");
 						Console.ReadKey(true);
 						skillPointUsed = true;
 					}
 				}
 			}
-			else if(input.Key == ConsoleKey.X && character.skillPoints ==0)
+			else if (input.Key == ConsoleKey.Z && treeItem.childSelected == null)
 			{
-				ConsoleHelper.ClearConsole();
-				ConsoleHelper.GameWrite("Not enough skill points left!");
-				Console.ReadKey(true);
-				skillPointUsed = true;
+				isHidden = true;
 			}
-			treeItem.ReadInput(input);
+			else
+			{
+				treeItem.ReadInput(input);
+			}
 			return skillPointUsed;
 		}
 
