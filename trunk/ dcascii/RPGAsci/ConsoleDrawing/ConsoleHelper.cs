@@ -48,15 +48,17 @@ namespace RPGAsci
 				}
 			}
 		}
-		static public void WriteLine(string text, ConsoleColor color)
+		static public void WriteLine(string text, ConsoleColor backgroundColor)
 		{
-			Console.BackgroundColor = color;
+			Console.ResetColor();
+			Console.BackgroundColor = backgroundColor;
 			Console.WriteLine(text);
 			Console.ResetColor();
 		}
-		static public void Write(string text, ConsoleColor color)
+		static public void Write(string text, ConsoleColor backgroundColor)
 		{
-			Console.BackgroundColor = color;
+			Console.ResetColor();
+			Console.BackgroundColor = backgroundColor;
 			Console.Write(text);
 			Console.ResetColor();
 		}
@@ -186,6 +188,7 @@ namespace RPGAsci
 		}
 		static public void ClearMainFrame()
 		{
+			Console.ResetColor();
 			for (int y = 1; y < Border.MainFrameHeight; y++)
 			{
 				Console.SetCursorPosition(1,y);
@@ -194,6 +197,7 @@ namespace RPGAsci
 		}
 		static public void ClearConsole()
 		{
+			Console.ResetColor();
 			consoleIndexX = consoleIndexY = 0;
 			for (int y = 0; y < 8; y++)
 			{

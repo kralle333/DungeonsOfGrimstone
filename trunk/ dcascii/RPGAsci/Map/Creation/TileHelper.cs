@@ -5,7 +5,7 @@ using System.Text;
 
 namespace RPGAsci
 {
-	class TileHelper
+	static class TileHelper
 	{
 		static private Random random = new Random();
 		static public List<Tile> GetAdjacentTiles(int x, int y, Map map)
@@ -29,13 +29,25 @@ namespace RPGAsci
 			}
 			return tiles;
 		}
-		static public Tile GetRandomTileOfType(Map map,string type)
+		static public List<Tile> GetAdjacentTilesOfType(int x, int y, Map map,Tile.TileType type)
+		{
+			List<Tile> tiles = GetAdjacentTiles(x, y, map);
+			tiles.RemoveAll(t => t.type != type);
+			return tiles;
+		}
+		static public List<Tile> GetAdjacentWalkableTiles(int x, int y, Map map)
+		{
+			List<Tile> tiles = GetAdjacentTiles(x, y, map);
+			tiles.RemoveAll(t => !t.IsWalkable());
+			return tiles;
+		}
+		static public Tile GetRandomTileOfType(Map map,Tile.TileType type)
 		{
 			while (true)
 			{
 				int randX = random.Next(1, map.width-1);
 				int randY = random.Next(1, map.height-1);
-				if (map.tiles[randX, randY].type == type)
+				if (map.tiles[randX, randY].type.Equals(type))
 				{
 					return map.tiles[randX, randY];
 				}

@@ -48,7 +48,7 @@ namespace RPGAsci
 			skills["TentacleMassage"] = new Skill(false, "Single", "TentacleMassage", new Effect(5, false), 1, new Skill.SkillGrowthRate(2, 1, 1, 1, 1, 1, 1, 1, 2));
 			skills["InkySaliva"] = new Skill(true, "Single", "InkySaliva", new Effect(3, 0, -5, 0, 0, 0, StatusEffect.None, false, 2), 0.9f, new Skill.SkillGrowthRate());
 			skills["PoisonSlime"] = new Skill(true, "Single", "PoisonSlime", null, 0.7f, new Skill.SkillGrowthRate());
-			skills["MultiTentacleMassage"] = new Skill(false, "All", "MultenticaleMassage", new Effect(15, false), 1f, new Skill.SkillGrowthRate());
+			skills["MultiTentacleMassage"] = new Skill(false, "All", "MultiTentacleMassage", new Effect(15, false), 1f, new Skill.SkillGrowthRate());
 
 			//BlackSmith
 			skills["MightyBlow"] = new Skill(true, "Single", "MightyBlow", new Effect(10), 0.5f, new Skill.SkillGrowthRate());

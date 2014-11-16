@@ -10,10 +10,7 @@ namespace RPGAsci
 		int level = 0;
 		MenuItem parent;
 		public MenuItem childSelected;
-		public MenuItem childMarked;
 		public List<MenuItem> children = new List<MenuItem>();
-		public bool currentlyMarked = false;
-		public bool currentlySelected = false;
 		public string text;
 		public int index = 0;
 		private int scrollIndex = 0;
@@ -44,7 +41,7 @@ namespace RPGAsci
 			this.text = text;
 			this.consoleX = consoleX + 1;
 			this.consoleY = consoleY + 41;
-			currentlySelected = true;
+			//currentlySelected = true;
 			this.description = "No description";
 		}
 		public void AddChild(MenuItem menuItem)
@@ -58,24 +55,16 @@ namespace RPGAsci
 				throw new Exception("Parent coordinates not set!");
 			}
 			children.Add(menuItem);
-			if (children.Count == 1)
-			{
-				menuItem.currentlyMarked = true;
-			}
 		}
 		public void ReadInput(ConsoleKeyInfo kb)
 		{
 			if (!showingDescription)
 			{
-				if (currentlySelected && childSelected == null && children.Count >= 0)
+				if (childSelected == null && children.Count >= 0)
 				{
-
 					if (kb.Key == ConsoleKey.LeftArrow && index > 0)
 					{
-						children[index].currentlyMarked = false;
 						index--;
-						children[index].currentlyMarked = true;
-						childMarked = children[index];
 						if (scrollable && !firstIndexSeen && index == 1)
 						{
 							scrollIndex--;
@@ -85,10 +74,7 @@ namespace RPGAsci
 					}
 					else if (kb.Key == ConsoleKey.RightArrow && index + 1 < children.Count)
 					{
-						children[index].currentlyMarked = false;
 						index++;
-						children[index].currentlyMarked = true;
-						childMarked = children[index];
 						ConsoleHelper.GameClearLine();
 						if (scrollable && !lastIndexSeen && lastDrawnIndex == index)
 						{
@@ -100,20 +86,12 @@ namespace RPGAsci
 					{
 						if (level > 0)
 						{
-							currentlySelected = false;
-							currentlyMarked = true;
-							if (children.Count() > 0)
-							{
-								childMarked.currentlyMarked = false;
-								childSelected = null;
-							}
 							ConsoleHelper.GameClearLine();
 							ConsoleHelper.GameGotoLine(level);
 							ConsoleHelper.GameClearLine();
 							if (parent != null)
 							{
 								parent.childSelected = null;
-								parent.childMarked = parent.children[parent.index];
 								parent.DrawChildren();
 							}
 
@@ -121,27 +99,17 @@ namespace RPGAsci
 					}
 					else if (kb.Key == ConsoleKey.X && children.Count() > 0 && !children[index].locked)
 					{
-						currentlySelected = true;
-						currentlyMarked = false;
-						children[index].currentlySelected = true;
 						childSelected = children[index];
 						ConsoleHelper.GameClearLine();
-						if (parent != null)
-						{
-							parent.childMarked = null;
-						}
-						childMarked.currentlyMarked = false;
-						childMarked.Draw();
-						childMarked = null;
 						ConsoleHelper.GameWriteLine("");
 						children[index].DrawChildren();
 						currentLevel++;
 					}
-					else if (kb.Key == ConsoleKey.H && childMarked != null)
+					else if (kb.Key == ConsoleKey.H)
 					{
 						showingDescription = true;
 						ConsoleHelper.GameWriteLine();
-						ConsoleHelper.GameWrite(childMarked.description);
+						ConsoleHelper.GameWrite("[Description]: "+ GetMarkedItem().description);
 					}
 				}
 				else if (childSelected != null)
@@ -159,14 +127,6 @@ namespace RPGAsci
 		public void Draw()
 		{
 			Console.SetCursorPosition(consoleX, consoleY);
-			if (currentlyMarked)
-			{
-				ConsoleHelper.GameWrite("->");
-			}
-			else if (currentlySelected)
-			{
-				ConsoleHelper.GameWrite("-");
-			}
 			ConsoleHelper.GameWrite(text + "    ");
 			if (level == 0)
 			{
@@ -190,16 +150,11 @@ namespace RPGAsci
 			{
 				if (!scrollable || ConsoleHelper.ConsoleX + (children[i].text + "     ").Length < Border.GameConsoleWidth)
 				{
-					if (i == 0 && childMarked == null)
-					{
-						children[0].currentlyMarked = true;
-						childMarked = children[0];
-					}
 					if (childSelected != null && children[i] == childSelected)
 					{
 						ConsoleHelper.GameWrite("-");
 					}
-					if (children[i].currentlyMarked)
+					else if (index == i)
 					{
 						ConsoleHelper.GameWrite("->");
 					}
@@ -245,25 +200,27 @@ namespace RPGAsci
 			}
 			return null;
 		}
-		public int IsChildrenPressed(string item)
+		public int GetIndexOfSelectedChild(string item)
 		{
-			MenuItem i = GetItem(item);
-			if (children.Count > 0)
+			if(text.Equals(item))
 			{
-				for (int count = 0; count < i.children.Count; count++)
+				return children.IndexOf(childSelected);
+			}
+			else
+			{
+				if (childSelected != null)
 				{
-					if (i.children[count].currentlySelected)
-					{
-						return count;
-					}
+					return childSelected.GetIndexOfSelectedChild(item);
+				}
+				else
+				{
+					return -1;
 				}
 			}
-			return -1;
 		}
 		public bool IsSelected(string item)
 		{
-			MenuItem i = GetItem(item);
-			if (i.text == item && i.currentlySelected)
+			if (childSelected != null && childSelected.text == item)
 			{
 				return true;
 			}
@@ -286,73 +243,49 @@ namespace RPGAsci
 		}
 		public string GetSelectedItemText(int level)
 		{
-			if (this.level == level)
+			if (this.level + 1 == level)
 			{
-				if (currentlySelected)
+				if (childSelected != null)
 				{
-					return text;
+					return childSelected.text;
+				}
+				else
+				{
+					return "";
 				}
 			}
-			foreach (MenuItem child in children)
+			else
 			{
-				string text = child.GetSelectedItemText(level);
-				if (text != "")
+				if (childSelected != null)
 				{
-					return text;
+					return childSelected.GetSelectedItemText(level);
 				}
 			}
 			return "";
 		}
 		public string GetMarkedItemText()
 		{
-			if (currentlyMarked)
-			{
-				return text;
-			}
-			foreach (MenuItem child in children)
-			{
-				string text = child.GetMarkedItemText();
-				if (text != "")
-				{
-					return text;
-				}
-			}
-			return "";
+			return GetMarkedItem().text;
 		}
 		public MenuItem GetMarkedItem()
 		{
-			if (currentlyMarked)
+			if (childSelected != null)
 			{
-				return this;
+				return childSelected.GetMarkedItem();
 			}
-			foreach (MenuItem child in children)
+			else
 			{
-				MenuItem item = child.GetMarkedItem();
-				if (item != null)
-				{
-					return item;
-				}
+				return children[index];
 			}
-			return null;
 		}
 		public void Reset()
 		{
 			index = 0;
+			scrollIndex = 0;
 			childSelected = null;
-			childMarked = null;
-			currentlySelected = false;
-			currentlyMarked = false;
 			foreach (MenuItem child in children)
 			{
 				child.Reset();
-			}
-			if (level == 0)
-			{
-				currentlySelected = true;
-				if (children.Count() > 0)
-				{
-					children[0].currentlyMarked = true;
-				}
 			}
 		}
 	}
