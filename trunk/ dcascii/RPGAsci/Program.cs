@@ -21,6 +21,7 @@ namespace RPGAsci
 			level = 1;
 			Console.SetBufferSize(100, 50);
 			Console.SetWindowSize(100, 50);
+            Console.Title = "Dungeons of Grimstone";
 			Console.CursorVisible = false;
 			Border.Draw(ConsoleColor.DarkBlue);
 			CharacterManager.Init();
@@ -98,8 +99,8 @@ namespace RPGAsci
 			MenuItem levelUpChoice = new MenuItem("Choose First Bonus", 0, 0);
 			Console.ResetColor();
 			DrawLogo();
-			
-			ConsoleHelper.GameWriteLine("Welcome To Dungeon Master Bro");
+
+            ConsoleHelper.GameWriteLine("Welcome To Dungeons of Grimstone");
 			ConsoleHelper.GameWriteLine("Create your party to start the game!\n");	
 			Console.ReadKey(true);
 			ConsoleHelper.ClearConsole();
@@ -163,7 +164,7 @@ namespace RPGAsci
 			
 			foreach(string line in logoLines)
 			{
-				Console.SetCursorPosition(18,currentLine);
+				Console.SetCursorPosition(5,currentLine);
 				Console.WriteLine(line);
 				currentLine++;
 			}
